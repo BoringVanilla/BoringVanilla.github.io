@@ -1,0 +1,102 @@
+body {
+    font-family: "Helvetica", "Lucida Grande", "sans-serif";
+    color: #021114;
+    width: 940px;
+    margin-left: auto;
+    margin-right: auto;
+}
+/* o h1 no titulo */
+.titulo {
+    background-color: cadetblue;
+    text-align: center;
+    padding: 10px;
+    margin: 20px 0;
+    font-size: 32px;
+}
+/* h2 vai virar .subtitulo*/
+.subtitulo {
+    border-bottom: 2px solid black;
+    text-align: center;
+    margin: 20px 0;
+}
+
+h3 {
+    text-align: center;
+    margin: 15px 0;
+}
+
+p {
+    text-align: center;
+    max-width: 800px;
+    margin: 15px auto;
+    line-height: 1.5;
+}
+
+img {
+    /*já alterei*/
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 20px auto;
+    border-radius: 8px;
+}
+
+figure {
+    text-align: center;
+    background-color: white;
+    border: 1px solid lightgrey;
+    margin: 20px auto;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+figcaption {
+    margin-top: 10px;
+}
+
+.empresa {
+    max-width: 900px;
+    margin: 20px auto;
+    text-align: center;
+    padding: 20px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
+    border: 1px solid rgba(0,204,255,0.3);
+}
+
+.fundadores {
+    width: 400px;
+    margin: 20px auto;
+}
+
+footer {
+    text-align: center;
+    margin: 30px 0;
+}
+
+ul {
+    max-width: 800px;
+    margin: 20px auto;
+    text-align: left;
+    padding-left: 20px;
+}
+
+address {
+    font-style: italic;
+    margin: 15px 0;
+}
+
+#aba-contato-simples {
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 20px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(0,204,255,0.3);
+    border-radius: 10px;
+    text-align: center;
+}
+
+.contato-aba p {
+    font-size: 18px;
+    margin: 10px 0;
+}
