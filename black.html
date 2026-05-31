@@ -97,6 +97,8 @@
         .contact-section { padding: 100px 50px; text-align: center; max-width: 800px; margin: 0 auto; }
         .input-cyber { width: 100%; max-width: 400px; padding: 15px; margin: 10px; background: #000; border: 1px solid #333; color: var(--primary); font-family: inherit; outline: none; transition: 0.3s; }
         .input-cyber:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0,255,65,0.2); }
+        .submit-cyber { margin-top: 10px; padding: 15px 50px; background: transparent; border: 1px solid var(--primary); color: var(--primary); font-family: inherit; font-size: 1rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s; }
+        .submit-cyber:hover { background: var(--primary); color: #000; box-shadow: 0 0 30px rgba(0,255,65,0.4); }
 
         /* FOOTER */
         footer { padding: 50px; text-align: center; color: #444; font-size: 0.8rem; border-top: 1px solid #111; margin-top: 50px; }
@@ -111,14 +113,13 @@
     </style>
 </head>
 <body>
-
     <!-- CURSOR -->
     <div id="cursor"></div>
 
     <!-- SCANLINE -->
     <div class="scanline-overlay"></div>
 
-    <!-- LOADER (TELA DE CARREGAMENTO) -->
+    <!-- LOADER -->
     <div id="loader">
         <div class="loader-box">
             <div class="loader-text">> EXECUTING AEGIS PROTOCOL...</div>
@@ -153,7 +154,7 @@
             </div>
             <h1 class="hero-title-2">VORTEX</h1>
             <p class="hero-sub" id="typewriter"></p>
-            <button class="btn-cyber">INITIALIZE DEFENSE</button>
+            <button class="btn-cyber" id="initBtn">INITIALIZE DEFENSE</button>
         </section>
 
         <section id="dashboard" class="dashboard">
@@ -215,5 +216,84 @@
 
         <section id="contact" class="contact-section">
             <h2 class="section-title">CONTATO SEGURO</h2>
-            <form>
-                <input type="text" class="input-cyber"
+            <form id="contactForm" onsubmit="return false;">
+                <input type="text" class="input-cyber" name="name" placeholder="SEU NOME" required>
+                <input type="email" class="input-cyber" name="email" placeholder="SEU EMAIL" required>
+                <input type="text" class="input-cyber" name="subject" placeholder="ASSUNTO" required>
+                <input type="text" class="input-cyber" name="message" placeholder="MENSAGEM" required>
+                <button type="submit" class="submit-cyber">ENVIAR</button>
+                <p style="max-width:520px;margin:18px auto 0;color:#3a3a3a;">
+                    (Demo) Nenhuma mensagem é enviada — apenas simulação.
+                </p>
+            </form>
+        </section>
+
+        <footer>
+            <div>AEGIS<span>VORTEX</span> • Cyber Defense • <span id="year"></span></div>
+        </footer>
+    </div>
+
+    <script>
+        // Cursor
+        const cursor = document.getElementById('cursor');
+        window.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        // Loader + reveal
+        const loader = document.getElementById('loader');
+        const mainContent = document.getElementById('main-content');
+        const bar = document.getElementById('bar');
+        const skipBtn = document.getElementById('skipBtn');
+
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 2;
+            bar.style.width = progress + '%';
+            if (progress >= 100) {
+                clearInterval(interval);
+                loader.classList.add('hidden');
+                mainContent.classList.add('visible');
+            }
+        }, 25);
+
+        skipBtn.addEventListener('click', () => {
+            clearInterval(interval);
+            bar.style.width = '100%';
+            loader.classList.add('hidden');
+            mainContent.classList.add('visible');
+        });
+
+        // Progress bar
+        const progressBar = document.getElementById('progressBar');
+        window.addEventListener('scroll', () => {
+            const doc = document.documentElement;
+            const scrollTop = doc.scrollTop;
+            const scrollHeight = doc.scrollHeight - doc.clientHeight;
+            const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+            progressBar.style.width = pct + '%';
+        }, { passive: true });
+
+        // Typewriter
+        const typewriterEl = document.getElementById('typewriter');
+        const text = 'SECURE YOUR SYSTEMS • DETECT THREATS • RESPOND FAST';
+        let idx = 0;
+        function tick() {
+            typewriterEl.textContent = text.slice(0, idx);
+            idx++;
+            if (idx <= text.length) setTimeout(tick, 35);
+        }
+        setTimeout(tick, 900);
+
+        // Button demo
+        const initBtn = document.getElementById('initBtn');
+        initBtn.addEventListener('click', () => {
+            alert('AEGIS PROTOCOL INITIALIZED (demo)');
+        });
+
+        // Footer year
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
