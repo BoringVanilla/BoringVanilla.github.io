@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JARVIS // Núcleo Azul</title>
+  <style>
+    :root{
+      --bg0:#030612;
+      --bg1:#050b1f;
+      --panel: rgba(8, 14, 35, .72);
+      --panel2: rgba(10, 18, 45, .55);
+      --text:#cfe8ff;
+      --muted:#6fa6cf;
+      --blue:#66d6ff;   /* núcleo azul claro */
+      --blue2:#b3f2ff;  /* brilho */
+      --cyan:#00e5ff;
+      --violet:#9b7bff;
+      --line: rgba(102, 214, 255, .25);
+      --line2: rgba(0, 229, 255, .18);
+      --danger:#ff3b7a;
+      --radius:18px;
+      --shadow: 0 0 30px rgba(102,214,255,.22);
+      --shadow2: 0 0 90px rgba(0,229,255,.18);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+
+    *{ box-sizing:border-box; margin:0; padding:0; }
+
+    body{
+      font-family: var(--mono);
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(102,214,255,.16), transparent 55%),
+                  radial-gradient(1000px 700px at 75% 30%, rgba(155,123,255,.12), transparent 60%),
+                  linear-gradient(180deg, var(--bg0), var(--bg1));
+      color: var(--text);
+      overflow-x:hidden;
+      min-height:100vh;
+    }
+
+    /* HUD overlays */
+    .scanlines{
+      position:fixed; inset:0; pointer-events:none; z-index:5;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(255,255,255,.035),
+        rgba(255,255,255,.015) 1px,
+        rgba(0,0,0,0) 3px,
+        rgba(0,0,0,0) 6px
+      );
+      mix-blend-mode: overlay;
+      opacity:.55;
+      animation: scanDrift 8s linear infinite;
+    }
+    @keyframes scanDrift{
+      0%{ transform: translateY(-12px); }
+      100%{ transform: translateY(12px); }
+    }
+
+    .grid{
+      position:fixed; inset:-20vh -20vw; pointer-events:none; z-index:1;
+      background:
+        linear-gradient(to right, rgba(102,214,255,.08) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(102,214,255,.08) 1px, transparent 1px);
+      background-size: 60px 60px;
+      transform: perspective(900px) rotateX(58deg) translateY(25vh);
+      opacity:.35;
+      filter: drop-shadow(0 0 20px rgba(102,214,255,.12));
+    }
+
+    /* subtle particles */
+    .stars{
+      position:fixed; inset:0; z-index:0; pointer-events:none;
+      background:
+        radial-gradient(2px 2px at 15% 25%, rgba(179,242,255,.45), transparent 55%),
+        radial-gradient(1px 1px at 55% 35%, rgba(0,229,255,.35), transparent 55%),
+        radial-gradient(2px 2px at 75% 65%, rgba(102,214,255,.35), transparent 55%),
+        radial-gradient(1px 1px at 30% 70%, rgba(155,123,255,.25), transparent 55%);
+      opacity:.55;
+      animation: twinkle 5s ease-in-out infinite;
+    }
+    @keyframes twinkle{
+      0%,100%{ opacity:.35; filter: blur(0px); }
+      50%{ opacity:.7; filter: blur(.4px); }
+    }
+
+    /* Cursor */
+    .cursor{
+      position:fixed; width:18px; height:18px;
+      border-radius:50%;
+      border:1px solid rgba(179,242,255,.55);
+      box-shadow: 0 0 18px rgba(102,214,255,.25);
+      pointer-events:none; z-index:20;
+      transform: translate(-50%,-50%);
+      mix-blend-mode: screen;
+      transition: width .08s ease, height .08s ease;
+    }
+    .cursor::after{
+      content:"";
+      position:absolute; inset:5px;
+      border-radius:50%;
+      background: radial-gradient(circle at 30% 30%, var(--blue2), var(--blue));
+      opacity:.9;
+    }
+
+    /* Layout */
+    .wrap{
+      position:relative;
+      z-index:2;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 32px 18px 70px;
+    }
+
+    header{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px;
+      padding: 14px 16px;
+      border: 1px solid rgba(102,214,255,.18);
+      background: linear-gradient(180deg, rgba(6,10,28,.65), rgba(7,12,31,.35));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(8px);
+      position:sticky; top:16px;
+      z-index:10;
+    }
+
+    .brand{
+      display:flex; flex-direction:column; gap:3px;
+    }
+    .brand .top{
+      display:flex; align-items:baseline; gap:10px;
+    }
+    .brand .jarvis{
+      font-size: 20px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      font-weight: 800;
+      text-shadow: 0 0 16px rgba(102,214,255,.35);
+    }
+    .brand .status{
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pillbar{ display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+    .pill{
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(102,214,255,.2);
+      background: rgba(3,8,20,.35);
+      font-size: 12px;
+      color: var(--muted);
+      display:flex; align-items:center; gap:8px;
+      user-select:none;
+    }
+    .dot{
+      width:8px; height:8px; border-radius:50%;
+      background: rgba(102,214,255,.25);
+      box-shadow: 0 0 14px rgba(102,214,255,.45);
+      animation: dotPulse 1.2s ease-in-out infinite;
+    }
+    @keyframes dotPulse{
+      0%,100%{ transform: scale(.9); opacity:.6; }
+      50%{ transform: scale(1.1); opacity:1; }
+    }
+
+    .hero{
+      margin-top: 18px;
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 18px;
+      align-items: stretch;
+    }
+    @media (max-width: 920px){
+      .hero{ grid-template-columns: 1fr; }
+      header{ position:relative; top:auto; }
+    }
+
+    .coreCard{
+      border-radius: calc(var(--radius) + 6px);
+      border: 1px solid rgba(102,214,255,.22);
+      background: linear-gradient(180deg, rgba(6,10,28,.62), rgba(4,7,18,.28));
+      box-shadow: var(--shadow2);
+      overflow:hidden;
+      position:relative;
+      min-height: 420px;
+    }
+
+    /* Core */
+    .coreWrap{
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      padding: 22px;
+    }
+
+    .core{
+      width:min(360px, 72vw);
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(179,242,255,.95) 0%, rgba(102,214,255,.55) 18%, rgba(0,229,255,.18) 38%, rgba(0,0,0,0) 63%),
+        radial-gradient(circle at 40% 35%, rgba(255,255,255,.25), rgba(0,0,0,0) 45%),
+        radial-gradient(circle at 60% 60%, rgba(155,123,255,.18), rgba(0,0,0,0) 52%);
+      box-shadow:
+        0 0 10px rgba(179,242,255,.25),
+        0 0 60px rgba(102,214,255,.28),
+        0 0 140px rgba(0,229,255,.18);
+      position:relative;
+      animation: coreBreath 3.4s ease-in-out infinite;
+    }
+    @keyframes coreBreath{
+      0%,100%{ transform: scale(1); filter: saturate(1.05); }
+      50%{ transform: scale(1.03); filter: saturate(1.35); }
+    }
+
+    .ring{
+      position:absolute; inset: -12%;
+      border-radius:50%;
+      border: 1px solid rgba(102,214,255,.18);
+      box-shadow: 0 0 50px rgba(102,214,255,.15);
+      animation: ringSpin 9s linear infinite;
+    }
+    @keyframes ringSpin{ to{ transform: rotate(360deg); } }
+
+    .ring::before{
+      content:""; position:absolute; inset: 7% 14%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, transparent, rgba(0,229,255,.35), transparent);
+      filter: blur(1px);
+      opacity:.7;
+    }
+
+    .ring2{
+      position:absolute; inset: -20%;
+      border-radius:50%;
+      border: 1px dashed rgba(179,242,255,.18);
+      opacity:.55;
+      animation: ringSpin 18s linear infinite reverse;
+    }
+
+    .holo{
+      position:absolute; inset:0;
+      border-radius:50%;
+      background: conic-gradient(from 180deg, rgba(0,229,255,0), rgba(0,229,255,.35), rgba(179,242,255,.12), rgba(0,229,255,0));
+      opacity:.45;
+      mix-blend-mode: screen;
+      filter: blur(.2px);
+      animation: holoSweep 2.2s ease-in-out infinite;
+    }
+    @keyframes holoSweep{
+      0%,100%{ transform: rotate(0deg) scale(1); }
+      50%{ transform: rotate(20deg) scale(1.02); }
+    }
+
+    .telemetry{
+      position:absolute;
+      bottom: 16px; left: 16px; right: 16px;
+      display:grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      align-items:stretch;
+    }
+    .mini{
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(102,214,255,.18);
+      background: rgba(3,8,20,.35);
+    }
+    .mini .k{ font-size: 11px; color: var(--muted); letter-spacing:.06em; }
+    .mini .v{ margin-top: 6px; font-size: 15px; font-weight: 800; color: var(--blue2); }
+
+    /* Console */
+    .consoleCard{
+      border-radius: calc(var(--radius) + 6px);
+      border: 1px solid rgba(102,214,255,.18);
+      background: linear-gradient(180deg, rgba(6,10,28,.55), rgba(4,7,18,.26));
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex; flex-direction:column;
+      min-height: 420px;
+    }
+
+    .consoleTop{
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(102,214,255,.12);
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+    }
+    .consoleTop .title{
+      display:flex; align-items:center; gap:10px;
+      font-weight:800;
+      letter-spacing:.16em;
+      text-transform: uppercase;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .lamp{
+      width:10px; height:10px; border-radius:50%;
+      background: rgba(102,214,255,.35);
+      box-shadow: 0 0 16px rgba(102,214,255,.45);
+      position:relative;
+    }
+    .lamp::after{
+      content:"";
+      position:absolute; inset:-7px;
+      border-radius:50%;
+      border:1px solid rgba(102,214,255,.15);
+      animation: lampGlow 1.6s ease-in-out infinite;
+    }
+    @keyframes lampGlow{
+      0%,100%{ transform: scale(.75); opacity:.35; }
+      50%{ transform: scale(1.05); opacity:.9; }
+    }
+
+    .console{
+      padding: 14px 16px 0;
+      flex:1;
+      overflow:auto;
+    }
+    .line{
+      font-size: 12.8px;
+      line-height: 1.45;
+      color: rgba(207,232,255,.95);
+      text-shadow: 0 0 10px rgba(102,214,255,.08);
+      margin-bottom: 10px;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .line .tag{ color: rgba(179,242,255,.9); }
+    .line .sys{ color: rgba(111,166,207,.95); }
+    .line .warn{ color: rgba(255,59,122,.9); }
+
+    .cursorTyping{
+      display:inline-block;
+      width: 10px;
+      border-right: 2px solid rgba(179,242,255,.85);
+      transform: translateY(2px);
+      animation: caret 1s steps(2) infinite;
+    }
+    @keyframes caret{ 0%,49%{ opacity:1; } 50%,100%{ opacity:0; } }
+
+    .inputBar{
+      padding: 14px 16px 16px;
+      border-top: 1px solid rgba(102,214,255,.12);
+      display:flex; gap:10px; flex-wrap:wrap;
+      align-items:center;
+    }
+    .input{
+      flex: 1;
+      min-width: 220px;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(102,214,255,.18);
+      background: rgba(0,0,0,.15);
+      color: var(--text);
+      outline:none;
+      box-shadow: inset 0 0 0 1px rgba(0,229,255,.05);
+      transition: border-color .2s ease, box-shadow .2s ease;
+      font-family: var(--mono);
+      font-size: 13px;
+    }
+    .input:focus{
+      border-color: rgba(0,229,255,.45);
+      box-shadow: 0 0 0 4px rgba(0,229,255,.12), inset 0 0 0 1px rgba(0,229,255,.12);
+    }
+    .btn{
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(102,214,255,.22);
+      background: linear-gradient(180deg, rgba(0,229,255,.12), rgba(0,229,255,.04));
+      color: var(--blue2);
+      cursor:pointer;
+      font-weight:800;
+      letter-spacing:.06em;
+      transition: transform .12s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(179,242,255,.45);
+      box-shadow: 0 0 26px rgba(0,229,255,.18);
+      background: linear-gradient(180deg, rgba(0,229,255,.18), rgba(0,229,255,.07));
+    }
+    .btn:active{ transform: translateY(0px) scale(.99); }
+
+    .suggestions{
+      padding: 0 16px 16px;
+      display:flex; gap:10px; flex-wrap:wrap;
+    }
+    .chip{
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(102,214,255,.18);
+      background: rgba(3,8,20,.28);
+      color: rgba(111,166,207,.95);
+      cursor:pointer;
+      font-size: 12px;
+      transition: all .2s ease;
+      user-select:none;
+    }
+    .chip:hover{
+      border-color: rgba(179,242,255,.4);
+      color: rgba(179,242,255,.98);
+      box-shadow: 0 0 18px rgba(102,214,255,.12);
+      transform: translateY(-1px);
+    }
+
+    /* Loader */
+    .boot{
+      position:fixed; inset:0; z-index:50;
+      background: radial-gradient(1000px 700px at 50% 40%, rgba(102,214,255,.10), rgba(0,0,0,.92));
+      display:flex; align-items:center; justify-content:center;
+      transition: opacity .7s ease, visibility .7s ease;
+    }
+    .boot.hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+
+    .bootBox{
+      width:min(560px, 92vw);
+      border-radius: 22px;
+      border:1px solid rgba(102,214,255,.22);
+      background: rgba(0,0,0,.35);
+      box-shadow: 0 0 80px rgba(0,229,255,.16);
+      padding: 22px;
+      position:relative;
+      overflow:hidden;
+    }
+    .bootBox::before{
+      content:"";
+      position:absolute; inset:-2px;
+      background: linear-gradient(90deg, transparent, rgba(102,214,255,.22), transparent);
+      transform: translateX(-60%);
+      animation: bootSweep 1.8s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes bootSweep{ 0%{ transform: translateX(-60%);} 100%{ transform: translateX(60%);} }
+
+    .bootTitle{
+      font-weight: 900;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+      font-size: 14px;
+      color: rgba(179,242,255,.95);
+      margin-bottom: 10px;
+    }
+    .bootSub{ color: rgba(111,166,207,.95); font-size: 12.8px; line-height:1.5; margin-bottom: 14px; }
+
+    .bar{
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(102,214,255,.10);
+      border: 1px solid rgba(102,214,255,.15);
+      overflow:hidden;
+    }
+    .bar > i{
+      display:block; height:100%; width: 0%;
+      background: linear-gradient(90deg, rgba(102,214,255,.15), rgba(0,229,255,.85), rgba(179,242,255,.20));
+      box-shadow: 0 0 20px rgba(0,229,255,.25);
+      border-radius: 999px;
+      animation: load 1.9s ease-in-out infinite;
+    }
+    @keyframes load{
+      0%{ width: 10%; filter: hue-rotate(0deg); }
+      50%{ width: 85%; filter: hue-rotate(14deg); }
+      100%{ width: 10%; filter: hue-rotate(0deg); }
+    }
+
+    .bootSteps{ margin-top: 16px; display:flex; flex-direction:column; gap:8px; }
+    .step{ font-size: 12.5px; color: rgba(207,232,255,.9); }
+    .step b{ color: var(--blue2); }
+
+    .skip{
+      margin-top: 14px;
+      width:100%;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border:1px solid rgba(102,214,255,.2);
+      background: rgba(3,8,20,.22);
+      color: rgba(179,242,255,.95);
+      cursor:pointer;
+      font-family: var(--mono);
+      font-weight:800;
+      letter-spacing:.06em;
+    }
+
+    /* Accessibility */
+    @media (prefers-reduced-motion: reduce){
+      .scanlines, .grid, .stars, .core, .ring, .ring2, .holo, .lamp::after, .cursorTyping, .bootBox::before, .bar > i { animation:none !important; }
+      *{ scroll-behavior:auto !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="stars"></div>
+  <div class="grid"></div>
+  <div class="scanlines"></div>
+  <div class="cursor" id="cursor"></div>
+
+  <!-- Boot / intro -->
+  <div class="boot" id="boot">
+    <div class="bootBox">
+      <div class="bootTitle">JARVIS / BLUE CORE</div>
+      <div class="bootSub">
+        Inicializando interface neural...
+        <br/>Render de HUD • Osciladores ópticos • Sincronização de telemetria
+      </div>
+      <div class="bar" aria-hidden="true"><i></i></div>
+      <div class="bootSteps" id="bootSteps"></div>
+      <button class="skip" id="skipBoot">[ PULAR BOOT ]</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="top">
+          <div class="jarvis">JARVIS</div>
+          <div class="status">Núcleo online • Azul claro</div>
+        </div>
+      </div>
+      <div class="pillbar">
+        <div class="pill"><span class="dot"></span>LINK: ESTÁVEL</div>
+        <div class="pill">LATÊNCIA: <span id="lat">—</span></div>
+        <div class="pill">SINAL: <span id="sig">—</span></div>
+      </div>
+    </header>
+
+    <div class="hero">
+      <section class="coreCard" aria-label="Núcleo azul">
+        <div class="coreWrap">
+          <div class="core" id="core">
+            <div class="ring"></div>
+            <div class="ring2"></div>
+            <div class="holo"></div>
+          </div>
+        </div>
+
+        <div class="telemetry">
+          <div class="mini">
+            <div class="k">CORES</div>
+            <div class="v" id="cores">04</div>
+          </div>
+          <div class="mini">
+            <div class="k">THREAT</div>
+            <div class="v" id="threat">LOW</div>
+          </div>
+          <div class="mini">
+            <div class="k">MODE</div>
+            <div class="v" id="mode">AURORA</div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="consoleCard" aria-label="Console do JARVIS">
+        <div class="consoleTop">
+          <div class="title"><span class="lamp"></span>CONSOLE / SYNTH UI</div>
+          <div style="color: rgba(111,166,207,.95); font-size:12px;">#LIVE</div>
+        </div>
+
+        <div class="console" id="console"></div>
+
+        <div class="suggestions" aria-label="Sugestões">
+          <div class="chip" data-cmd="verificar proteção">verificar proteção</div>
+          <div class="chip" data-cmd="status do sistema">status do sistema</div>
+          <div class="chip" data-cmd="modo aurora">modo aurora</div>
+          <div class="chip" data-cmd="limpar logs">limpar logs</div>
+        </div>
+
+        <div class="inputBar">
+          <input class="input" id="cmd" placeholder="Digite um comando... (ex: status do sistema)" autocomplete="off" />
+          <button class="btn" id="send">EXECUTAR</button>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const $ = (id) => document.getElementById(id);
+
+    // Cursor
+    const cursor = $('cursor');
+    window.addEventListener('mousemove', (e) => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+    });
+
+    // Boot sequence
+    const boot = $('boot');
+    const bootSteps = $('bootSteps');
+    const skipBoot = $('skipBoot');
+
+    const steps = [
+      { t:'CORE SYNC', d:'Sincronizando referência do núcleo...' },
+      { t:'HOLOGRAPHIC RASTER', d:'Gerando varredura de HUD futurista...' },
+      { t:'SECURE CHANNEL', d:'Estabelecendo enlace criptografado (demo)...' },
+      { t:'AURORA MODE', d:'Ativando modo de brilho azul claro...' },
+    ];
+
+    let stepIdx = 0;
+    function renderSteps(){
+      bootSteps.innerHTML = '';
+      steps.forEach((s, i) => {
+        const el = document.createElement('div');
+        el.className = 'step';
+        el.innerHTML = `<b>${s.t}</b> — ${s.d}`;
+        if(i < stepIdx) el.style.opacity = 1;
+        else el.style.opacity = 0.55;
+        bootSteps.appendChild(el);
+      });
+    }
+
+    function progressBoot(){
+      renderSteps();
+      const timer = setInterval(() => {
+        stepIdx++;
+        renderSteps();
+        if(stepIdx >= steps.length){
+          clearInterval(timer);
+          setTimeout(() => {
+            boot.classList.add('hidden');
+            window.__jarvisReady = true;
+            initTelemetry();
+            pushConsoleLine('sys', 'Sistema pronto. JARVIS está aguardando comandos.');
+          }, 350);
+        }
+      }, 520);
+    }
+
+    skipBoot.addEventListener('click', () => {
+      stepIdx = steps.length;
+      renderSteps();
+      boot.classList.add('hidden');
+      window.__jarvisReady = true;
+      initTelemetry();
+      pushConsoleLine('sys', 'Boot pulado (demo). Núcleo ativo e pronto.');
+    });
+
+    progressBoot();
+
+    // Telemetry values
+    function randInt(a,b){ return Math.floor(a + Math.random()*(b-a+1)); }
+    function initTelemetry(){
+      const latEl = $('lat');
+      const sigEl = $('sig');
+      const threatEl = $('threat');
+      const modeEl = $('mode');
+      const coreEl = $('cores');
+
+      coreEl.textContent = String(randInt(3,6)).padStart(2,'0');
+      modeEl.textContent = ['AURORA','SPECTRA','VECTOR','NOVA'][randInt(0,3)];
+
+      setInterval(() => {
+        latEl.textContent = randInt(7, 34) + 'ms';
+        sigEl.textContent = randInt(72, 99) + '%';
+
+        const t = randInt(0, 100);
+        threatEl.textContent = t < 70 ? 'LOW' : t < 92 ? 'MED' : 'HIGH';
+        threatEl.style.color = t < 70 ? 'rgba(179,242,255,.95)' : t < 92 ? 'rgba(102,214,255,.95)' : 'rgba(255,59,122,.92)';
+
+        // subtle core visual response
+        const core = $('core');
+        const scale = t < 70 ? 1.0 : t < 92 ? 1.02 : 1.03;
+        core.style.transform = 'scale(' + scale + ')';
+        setTimeout(() => { core.style.transform = ''; }, 160);
+      }, 1200);
+    }
+
+    // Console logic
+    const consoleEl = $('console');
+    const cmdEl = $('cmd');
+    const sendBtn = $('send');
+
+    function now(){
+      const d = new Date();
+      return d.toLocaleTimeString([], { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    }
+
+    function scrollConsoleToBottom(){
+      consoleEl.scrollTop = consoleEl.scrollHeight;
+    }
+
+    function pushConsoleLine(type, msg){
+      const line = document.createElement('div');
+      line.className = 'line';
+      const tag = now();
+      let klass = '';
+      if(type === 'sys') klass = 'sys';
+      if(type === 'warn') klass = 'warn';
+      if(type === 'cmd') klass = '';
+      line.innerHTML = `<span class="tag">[${tag}]</span> <span class="${klass}">${msg}</span>`;
+      consoleEl.appendChild(line);
+      scrollConsoleToBottom();
+      return line;
+    }
+
+    function typeReply(text, prefixType='sys'){
+      const line = document.createElement('div');
+      line.className = 'line';
+      line.innerHTML = `<span class="tag">[${now()}]</span> <span class="${prefixType === 'warn' ? 'warn' : 'sys'}"></span><span class="cursorTyping"></span>`;
+      const span = line.querySelector('span');
+      consoleEl.appendChild(line);
+      scrollConsoleToBottom();
+
+      const contentSpan = line.querySelector('span:not(.tag)');
+      let i = 0;
+      const tick = () => {
+        contentSpan.textContent = text.slice(0, i);
+        i++;
+        if(i <= text.length){
+          setTimeout(tick, 18 + Math.random()*18);
+        } else {
+          const caret = line.querySelector('.cursorTyping');
+          if(caret) caret.remove();
+          scrollConsoleToBottom();
+        }
+      };
+      tick();
+    }
+
+    function normalize(s){
+      return (s || '').toString().trim().toLowerCase();
+    }
+
+    function handleCommand(raw){
+      const text = normalize(raw);
+      if(!text) return;
+
+      // Show user cmd
+      pushConsoleLine('cmd', `CMD ▶ ${raw}`);
+
+      if(text.includes('limpar') && text.includes('log')){
+        consoleEl.innerHTML = '';
+        pushConsoleLine('sys', 'Logs limpos (demo).');
+        return;
+      }
+
+      if(text.includes('status')){
+        typeReply('Sistema: OK\nCanal seguro: ativo\nAmeaças: scan ativo\nTempo de resposta: consistente (demo)', 'sys');
+        return;
+      }
+
+      if(text.includes('modo') && text.includes('aurora')){
+        $('mode').textContent = 'AURORA';
+        typeReply('Modo AURORA ativado. Brilho azul claro calibrado para leitura noturna.', 'sys');
+        return;
+      }
+
+      if(text.includes('proteç') || text.includes('protec') || text.includes('defes') || text.includes('segura')){
+        typeReply('Executando verificação de proteção...\n> Firewall: ONLINE\n> Detectores: ONLINE\n> Heurística: ATIVA\n> Regras: atualizadas (demo)', 'sys');
+        return;
+      }
+
+      // default
+      typeReply('Comando não reconhecido. Sugestões: \n- status do sistema\n- verificar proteção\n- modo aurora\n- limpar logs', 'warn');
+    }
+
+    sendBtn.addEventListener('click', () => {
+      if(!window.__jarvisReady) return;
+      handleCommand(cmdEl.value);
+      cmdEl.value = '';
+      cmdEl.focus();
+    });
+
+    cmdEl.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter'){
+        if(!window.__jarvisReady) return;
+        handleCommand(cmdEl.value);
+        cmdEl.value = '';
+      }
+    });
+
+    document.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        if(!window.__jarvisReady) return;
+        cmdEl.value = chip.dataset.cmd;
+        handleCommand(chip.dataset.cmd);
+        cmdEl.value = '';
+        cmdEl.focus();
+      });
+    });
+
+    // Greeting after a moment
+    setTimeout(() => {
+      if(window.__jarvisReady) return;
+      // will be pushed after boot finishes
+    }, 900);
+  </script>
+</body>
+</html>
