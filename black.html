@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title AegisVortex - Cybersecurity></title>
+    <style>
+        /* --- VARIÁVEIS E RESET --- */
+        :root {
+            --bg-dark: #050505;
+            --bg-panel: #0f0f0f;
+            --primary: #00ff41; /* Matrix Green */
+            --secondary: #00e5ff; /* Cyan */
+            --text-main: #e0e0e0;
+            --text-muted: #888;
+            --font-main: 'Courier New', Courier, monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            overflow-x: hidden;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        ul { list-style: none; }
+
+        /* --- ANIMAÇÕES (KEYFRAMES) --- */
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px var(--primary); }
+            50% { box-shadow: 0 0 20px var(--primary); }
+            100% { box-shadow: 0 0 5px var(--primary); }
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        @keyframes typeWriter {
+            from { width: 0; }
+            to { width: 100%; }
+        }
+
+        @keyframes blinkCursor {
+            50% { border-color: transparent; }
+        }
+
+        @keyframes gridMove {
+            0% { transform: translateY(0); }
+            100% { transform: translate(50px); }
+        }
+
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- TELA DE CARREGAMENTO (LOADER) --- */
+        #loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader-text {
+            color: var(--primary);
+            font-size: 1.5rem;
+            border-right: 2px solid var(--primary);
+            white-space: nowrap;
+            overflow: hidden;
+            animation: typeWriter 2s steps(30) forwards, blinkCursor 0.5s step-end infinite;
+            max-width: 30ch;
+        }
+
+        /* --- BACKGROUND ANIMADO --- */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
+            z-index: -1;
+            animation: gridMove 2s linear infinite;
+            pointer-events: none;
+        }
+
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            background: rgba(5, 5, 5, 0.8);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            width: 100%;
+            z-index: 100;
+            border-bottom: 1px solid rgba(0, 255, 65, 0.1);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+        }
+
+        .logo span { color: var(--primary); }
+        
+        .logo:hover {
+            animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
+            color: var(--secondary);
+        }
+
+        nav ul {
+            display: flex;
+            gap: 30px;
+        }
+
+        nav a {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+            text-shadow: 0 0 10px var(--primary);
+        }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-size: 5rem;
+            line-height: 1;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #fff, var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            margin-bottom: 40px;
+            min-height: 1.5rem;
+        }
+
+        .cta-btn {
+            padding: 15px 40px;
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            font-family: inherit;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-btn:hover {
+            background: var(--primary);
+            color: #000;
+            box-shadow: 0 0 30px rgba(0, 255, 65, 0.4);
+        }
+
+        /* --- SECTIONS COMMON --- */
+        section {
+            padding: 100px 50px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            margin-bottom: 50px;
+            text-align: center;
+            position: relative;
+            display: inline-block;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 2px;
+            background: var(--primary);
+            margin: 10px auto 0;
+        }
+
+        /* --- SERVICES (CARDS) --- */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .service-card {
+            background: var(--bg-panel);
+            padding: 40px;
+            border: 1px solid #222;
+            transition: 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .service-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.4s;
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary);
+        }
+
+        .service-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .service-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+            color: var(--secondary);
+        }
+
+        /* --- SCROLL ANIMATION UTILITIES --- */
+        .hidden {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 1s;
+        }
+
+        .show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background: #000;
+            padding: 50px;
+            text-align: center;
+            border-top: 1px solid #222;
+            color: var(--text-muted);
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 3rem; }
+            header { padding: 20px; }
+            nav ul { display: none; } /* Simplificação para demo */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ANIMAÇÃO DE CARREGAMENTO -->
+    <div id="loader">
+        <div class="loader-text">AegisVortex System initializing...</div>
+    </div>
+
+    <!-- BACKGROUND ANIMADO -->
+    <div class="bg-grid"></div>
+
+    <!-- CABEÇALHO -->
+    <header>
+        <div class="logo">Aegis<span>Vortex</span></div>
+        <nav>
+            <ul>
+                <li><a href="#inicio">Início</a></li>
+                <li><a href="#servicos">Serviços</a></li>
+                <li><a href="#sobre">Sobre Nós</a></li>
+                <li><a href="#contato">Contato</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section id="inicio" class="hero">
+        <h1 class="hidden">AegisVortex</h1>
+        <p class="hidden"><span id="typewriter"></span></p> <!-- Texto gerado por JS -->
+        <a href="#contato" class="cta-btn hidden">Iniciar Diagnóstico</a>
+    </section>
+
+    <!-- SERVIÇOS -->
+    <section id="servicos">
+        <h2 class="section-title hidden">NOSSOS SERVIÇOS</h2>
+        <div class="services-grid">
+            <!-- Card 1 -->
+            <div class="service-card hidden" style="transition-delay: 100ms;">
+                <h3>Penetration Testing</h3>
+                <p>Simulação de ataques cibernéticos para identificar vulnerabilidades em sua infraestrutura antes que invasores reais o façam.</p>
+            </div>
+            <!-- Card 2 -->
+            <div class="service-card hidden" style="transition-delay: 200ms;">
+                <h3>Security Monitoring</h3>
+                <p>Monitoramento 24/7 de seus sistemas utilizando Inteligência Artificial para detectar anomalias em tempo real.</p>
+            </div>
+            <!-- Card 3 -->
+            <div class="service-card hidden" style="transition-delay: 300ms;">
+                <h3>Data Recovery</h3>
+                <p>Protocolos avançados de recuperação de dados em caso de ransomwares ou falhas catastrophicas. Seu dados são nossa prioridade.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOBRE -->
+    <section id="sobre">
+        <h2 class="section-title hidden">SOBRENÓS</h2>
+        <div class="hidden" style="text-align: center; max-width: 800px; margin: 0 auto;">
+            <p style="font-size: 1.2rem; line-height: 1.6;">
+                A AegisVortex nasceu no centro da dark web, mas hoje atua na defesa das maiores corporações do mundo.
