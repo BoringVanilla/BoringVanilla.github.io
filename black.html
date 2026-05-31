@@ -3,24 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title AegisVortex - Cybersecurity></title>
+    <title>AegisVortex - Cyber Defense</title>
     <style>
-        /* --- VARIÁVEIS E RESET --- */
+        /* --- VARIÁVEIS & RESET --- */
         :root {
-            --bg-dark: #050505;
-            --bg-panel: #0f0f0f;
-            --primary: #00ff41; /* Matrix Green */
-            --secondary: #00e5ff; /* Cyan */
-            --text-main: #e0e0e0;
-            --text-muted: #888;
-            --font-main: 'Courier New', Courier, monospace;
+            --bg-dark: #030508;
+            --bg-panel: #0a0f14;
+            --primary: #00ff41;
+            --secondary: #00e5ff;
+            --danger: #ff0055;
+            --text-main: #cfcfcf;
+            --text-muted: #556;
+            --font-main: 'Courier New', monospace;
+            --neon-glow: 0 0 10px var(--primary), 0 0 20px var(--primary);
+            --neon-blue: 0 0 10px var(--secondary), 0 0 20px var(--secondary);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: none; /* Esconder cursor padrão */ }
 
         body {
             background-color: var(--bg-dark);
@@ -29,337 +28,346 @@
             overflow-x: hidden;
         }
 
-        a { text-decoration: none; color: inherit; }
-        ul { list-style: none; }
-
-        /* --- ANIMAÇÕES (KEYFRAMES) --- */
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(-2px, -2px); }
-            60% { transform: translate(2px, 2px); }
-            80% { transform: translate(2px, -2px); }
-            100% { transform: translate(0); }
-        }
-
-        @keyframes pulse-glow {
-            0% { box-shadow: 0 0 5px var(--primary); }
-            50% { box-shadow: 0 0 20px var(--primary); }
-            100% { box-shadow: 0 0 5px var(--primary); }
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
-        }
-
-        @keyframes typeWriter {
-            from { width: 0; }
-            to { width: 100%; }
-        }
-
-        @keyframes blinkCursor {
-            50% { border-color: transparent; }
-        }
-
-        @keyframes gridMove {
-            0% { transform: translateY(0); }
-            100% { transform: translate(50px); }
-        }
-
-        @keyframes fadeInUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* --- TELA DE CARREGAMENTO (LOADER) --- */
-        #loader {
+        /* --- CURSOR LASER PERSONALIZADO --- */
+        #cursor {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
+            width: 20px;
+            height: 20px;
+            border: 1px solid var(--primary);
+            border-radius: 50%;
+            pointer-events: none;
             z-index: 9999;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            transition: opacity 0.5s ease;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s;
+            mix-blend-mode: difference;
+        }
+        #cursor::after {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 4px; height: 4px;
+            background: var(--danger);
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
         }
 
-        .loader-text {
-            color: var(--primary);
-            font-size: 1.5rem;
-            border-right: 2px solid var(--primary);
-            white-space: nowrap;
-            overflow: hidden;
-            animation: typeWriter 2s steps(30) forwards, blinkCursor 0.5s step-end infinite;
-            max-width: 30ch;
+        /* --- ANIMAÇÕES CORE --- */
+        @keyframes scanline {
+            0% { top: -10%; }
+            100% { top: 110%; }
         }
 
-        /* --- BACKGROUND ANIMADO --- */
-        .bg-grid {
+        @keyframes glitch-anim {
+            0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); }
+            20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); }
+            40% { clip-path: inset(40% 0 50% 0); transform: translate(-2px, 2px); }
+            60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); }
+            80% { clip-path: inset(10% 0 70% 0); transform: translate(-1px, 1px); }
+            100% { clip-path: inset(30% 0 50% 0); transform: translate(0); }
+        }
+
+        @keyframes matrixRain {
+            0% { background-position: 0 0; }
+            100% { background-position: 0 100%; }
+        }
+
+        @keyframes typing { from { width: 0; } to { width: 100%; } }
+        @keyframes blink { 50% { border-color: transparent; } }
+
+        @keyframes float3d {
+            0%, 100% { transform: translateY(0) rotateX(0); }
+            50% { transform: translateY(-10px) rotateX(5deg); }
+        }
+        
+        @keyframes borderRun {
+            0% { background-position: 0 0, 100% 0, 0 100%, 0 100%; }
+            100% { background-position: 100% 0, 0 100%, 0 0, 100% 0; }
+        }
+
+        /* --- FUNDO MATRIX RAIN --- */
+        #matrix-bg {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 200%;
-            height: 200%;
-            background-image: 
-                linear-gradient(rgba(0, 255, 65, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 255, 65, 0.1) 1px, transparent 1px);
-            background-size: 40px 40px;
-            transform: perspective(500px) rotateX(60deg) translateY(-100px) translateZ(-200px);
-            z-index: -1;
-            animation: gridMove 2s linear infinite;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent 0%, var(--bg-dark) 100%),
+                        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 65, 0.05) 3px);
+            z-index: -2;
+            background-size: 100% 100%, 100% 4px;
+            animation: matrixRain 20s linear infinite;
+        }
+
+        .scanline-overlay {
+            position: fixed;
+            left: 0; width: 100%;
+            height: 10px;
+            background: rgba(0, 255, 65, 0.1);
+            box-shadow: 0 0 15px var(--primary);
+            z-index: 900;
+            opacity: 0.5;
+            animation: scanline 4s linear infinite;
             pointer-events: none;
         }
 
+        /* --- LOADING SCREEN --- */
+        #loader {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+        .loader-content {
+            border: 1px solid var(--primary);
+            padding: 40px;
+            position: relative;
+            background: #000;
+            overflow: hidden;
+        }
+        .loader-text {
+            color: var(--primary);
+            font-size: 1.2rem;
+            border-right: 2px solid var(--primary);
+            white-space: nowrap;
+            overflow: hidden;
+            animation: typing 2s steps(20) forwards, blink 0.5s step-end infinite;
+            width: 20ch;
+        }
+        .loader-bar {
+            position: absolute; bottom: 0; left: 0; height: 2px;
+            background: var(--danger);
+            width: 0%;
+            animation: loadBar 2.5s ease-out forwards;
+            box-shadow: 0 0 10px var(--danger);
+        }
+        @keyframes loadBar { to { width: 100%; } }
+
         /* --- HEADER --- */
         header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             padding: 20px 50px;
-            background: rgba(5, 5, 5, 0.8);
-            backdrop-filter: blur(10px);
-            position: fixed;
-            width: 100%;
-            z-index: 100;
-            border-bottom: 1px solid rgba(0, 255, 65, 0.1);
+            background: rgba(3, 5, 8, 0.9);
+            backdrop-filter: blur(5px);
+            position: fixed; width: 100%; z-index: 100;
+            border-bottom: 1px solid rgba(0,255,65,0.1);
         }
-
-        .logo {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: var(--text-main);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            position: relative;
-        }
-
-        .logo span { color: var(--primary); }
+        .logo { font-size: 1.5rem; font-weight: bold; letter-spacing: 3px; text-transform: uppercase; }
+        .logo span { color: var(--primary); text-shadow: var(--neon-glow); }
         
-        .logo:hover {
-            animation: glitch 0.3s cubic-bezier(.25, .46, .45, .94) both infinite;
-            color: var(--secondary);
-        }
-
-        nav ul {
-            display: flex;
-            gap: 30px;
-        }
-
         nav a {
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            transition: color 0.3s;
+            color: var(--text-muted); text-decoration: none; margin-left: 30px;
+            font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px;
+            transition: 0.3s;
         }
+        nav a:hover { color: var(--secondary); text-shadow: var(--neon-blue); letter-spacing: 2px; }
 
-        nav a:hover {
-            color: var(--primary);
-            text-shadow: 0 0 10px var(--primary);
-        }
-
-        /* --- HERO SECTION --- */
+        /* --- HERO --- */
         .hero {
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
             text-align: center;
-            padding: 0 20px;
+            perspective: 1000px;
+        }
+        
+        .hero-text {
+            font-size: 6rem; line-height: 1;
+            background: linear-gradient(180deg, #fff, #555);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            position: relative;
+        }
+        
+        .hero-sub {
+            color: var(--primary); font-size: 1.2rem; margin-top: 20px;
+            min-height: 30px;
+        }
+        
+        /* Glitch Effect Wrapper */
+        .glitch-wrapper { position: relative; }
+        .glitch-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0;
+        }
+        .hero-text:hover .glitch-layer { opacity: 1; }
+        .hero-text:hover .glitch-layer:nth-child(2) {
+            color: var(--danger); animation: glitch-anim 0.4s infinite; clip-path: inset(0 0 0 0);
+        }
+        .glitch-layer:nth-child(3) { color: var(--secondary); animation: glitch-anim 0.4s infinite reverse; }
+
+        /* --- BTN MAIN --- */
+        .btn-cyber {
+            margin-top: 40px; padding: 15px 40px;
+            background: transparent; border: 1px solid var(--primary); color: var(--primary);
+            font-family: var(--font-main); font-size: 1rem; letter-spacing: 2px;
+            position: relative; overflow: hidden; transition: 0.3s;
+        }
+        .btn-cyber::before {
+            content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(0,255,65,0.3), transparent);
+            transition: 0.5s;
+        }
+        .btn-cyber:hover::before { left: 100%; }
+        .btn-cyber:hover {
+            background: var(--primary); color: #000;
+            box-shadow: 0 0 30px rgba(0,255,65,0.4);
         }
 
-        .hero h1 {
-            font-size: 5rem;
-            line-height: 1;
-            margin-bottom: 20px;
-            background: linear-gradient(90deg, #fff, var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        /* --- SCROLL PROGRESS --- */
+        #progressBar {
+            position: fixed; top: 0; left: 0; height: 2px; background: var(--danger);
+            width: 0%; z-index: 1000; box-shadow: 0 0 10px var(--danger);
         }
 
-        .hero p {
-            font-size: 1.2rem;
-            color: var(--text-muted);
-            margin-bottom: 40px;
-            min-height: 1.5rem;
+        /* --- DASHBOARD SECTION --- */
+        .dashboard {
+            padding: 100px 50px; max-width: 1200px; margin: 0 auto;
+            display: grid; grid-template-columns: 1fr 1fr; gap: 50px;
         }
-
-        .cta-btn {
-            padding: 15px 40px;
-            background: transparent;
-            border: 1px solid var(--primary);
-            color: var(--primary);
-            font-family: inherit;
-            font-size: 1rem;
-            cursor: pointer;
+        
+        .stat-card {
+            background: var(--bg-panel); border: 1px solid #222; padding: 30px;
+            position: relative;
             transition: 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            position: relative;
-            overflow: hidden;
         }
-
-        .cta-btn:hover {
-            background: var(--primary);
-            color: #000;
-            box-shadow: 0 0 30px rgba(0, 255, 65, 0.4);
+        
+        .stat-card:hover {
+            transform: scale(1.02);
+            border-color: var(--secondary);
+            box-shadow: var(--neon-blue);
         }
-
-        /* --- SECTIONS COMMON --- */
-        section {
-            padding: 100px 50px;
-            max-width: 1200px;
-            margin: 0 auto;
+        
+        .stat-number {
+            font-size: 3rem; color: var(--text-main); font-weight: bold;
         }
+        .stat-label { color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; }
 
-        .section-title {
-            font-size: 2.5rem;
-            margin-bottom: 50px;
-            text-align: center;
-            position: relative;
-            display: inline-block;
-            left: 50%;
-            transform: translateX(-50%);
-        }
-
-        .section-title::after {
-            content: '';
-            display: block;
-            width: 50px;
-            height: 2px;
-            background: var(--primary);
-            margin: 10px auto 0;
-        }
-
-        /* --- SERVICES (CARDS) --- */
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        /* --- FLIP CARDS --- */
+        .services-section { padding: 50px; max-width: 1200px; margin: 0 auto; }
+        .flip-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 30px;
+            perspective: 1000px;
         }
-
-        .service-card {
+        .flip-card {
+            background: transparent; height: 300px;
+            transform-style: preserve-3d; transition: transform 0.8s;
+            cursor: pointer;
+        }
+        .flip-card-inner {
+            position: relative; width: 100%; height: 100%;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+        .flip-card:hover .flip-card-inner { transform: rotateY(180deg); }
+        
+        .flip-front, .flip-back {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            padding: 30px;
+            border: 1px solid var(--primary);
             background: var(--bg-panel);
-            padding: 40px;
-            border: 1px solid #222;
-            transition: 0.4s;
-            position: relative;
-            overflow: hidden;
+            text-align: center;
         }
-
-        .service-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 2px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            transform: scaleX(0);
-            transform-origin: left;
-            transition: transform 0.4s;
-        }
-
-        .service-card:hover {
-            transform: translateY(-10px);
-            border-color: var(--primary);
-        }
-
-        .service-card:hover::before {
-            transform: scaleX(1);
-        }
-
-        .service-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
+        .flip-back {
+            transform: rotateY(180deg);
+            border-color: var(--secondary);
             color: var(--secondary);
         }
 
-        /* --- SCROLL ANIMATION UTILITIES --- */
-        .hidden {
-            opacity: 0;
-            transform: translateY(50px);
-            transition: all 1s;
-        }
+        .icon-cyber { font-size: 3rem; margin-bottom: 20px; color: var(--primary); }
 
-        .show {
-            opacity: 1;
-            transform: translateY(0);
+        /* --- SCANNER EFFECT DIVIDER --- */
+        .divider {
+            height: 100px;
+            background: linear-gradient(to bottom, transparent, var(--bg-dark)),
+                        linear-gradient(to top, transparent, var(--bg-panel));
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden;
         }
+        .divider-text { font-size: 2rem; letter-spacing: 10px; opacity: 0.2; }
 
+        /* --- CONTACT FORM --- */
+        .contact-section { padding: 100px 20px; text-align: center; }
+        .input-cyber {
+            width: 100%; max-width: 400px; padding: 15px; margin: 10px;
+            background: #000; border: 1px solid #333; color: var(--primary);
+            font-family: var(--font-main); outline: none;
+            transition: 0.3s;
+        }
+        .input-cyber:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0,255,65,0.2);
+        }
+        
         /* --- FOOTER --- */
-        footer {
-            background: #000;
-            padding: 50px;
-            text-align: center;
-            border-top: 1px solid #222;
-            color: var(--text-muted);
-        }
+        footer { padding: 30px; text-align: center; color: #444; font-size: 0.8rem; border-top: 1px solid #111; }
 
         /* --- RESPONSIVE --- */
         @media (max-width: 768px) {
-            .hero h1 { font-size: 3rem; }
+            .hero-text { font-size: 3rem; }
+            .dashboard { grid-template-columns: 1fr; }
             header { padding: 20px; }
-            nav ul { display: none; } /* Simplificação para demo */
+            nav { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <!-- ANIMAÇÃO DE CARREGAMENTO -->
+    <!-- CURSOR -->
+    <div id="cursor"></div>
+
+    <!-- SCANNER LINE -->
+    <div class="scanline-overlay"></div>
+
+    <!-- LOADING SCREEN -->
     <div id="loader">
-        <div class="loader-text">AegisVortex System initializing...</div>
+        <div class="loader-content">
+            <div class="loader-text">> EXECUTING_AEGIS_PROTOCOL...</div>
+            <div class="loader-bar"></div>
+        </div>
     </div>
 
-    <!-- BACKGROUND ANIMADO -->
-    <div class="bg-grid"></div>
+    <!-- MATRIX BG -->
+    <div id="matrix-bg"></div>
 
-    <!-- CABEÇALHO -->
+    <!-- SCROLL PROGRESS -->
+    <div id="progressBar"></div>
+
+    <!-- HEADER -->
     <header>
-        <div class="logo">Aegis<span>Vortex</span></div>
+        <div class="logo">AEGIS<span>VORTEX</span></div>
         <nav>
-            <ul>
-                <li><a href="#inicio">Início</a></li>
-                <li><a href="#servicos">Serviços</a></li>
-                <li><a href="#sobre">Sobre Nós</a></li>
-                <li><a href="#contato">Contato</a></li>
-            </ul>
+            <a href="#home">HOME</a>
+            <a href="#dashboard">DASHBOARD</a>
+            <a href="#services">SERVICES</a>
+            <a href="#contact">CONTACT</a>
         </nav>
     </header>
 
-    <!-- HERO SECTION -->
-    <section id="inicio" class="hero">
-        <h1 class="hidden">AegisVortex</h1>
-        <p class="hidden"><span id="typewriter"></span></p> <!-- Texto gerado por JS -->
-        <a href="#contato" class="cta-btn hidden">Iniciar Diagnóstico</a>
+    <!-- HERO -->
+    <section id="home" class="hero">
+        <div class="glitch-wrapper">
+            <h1 class="hero-text">AEGIS</h1>
+            <h1 class="hero-text glitch-layer">AEGIS</h1>
+            <h1 class="hero-text glitch-layer">AEGIS</h1>
+        </div>
+        <h1 class="hero-text" style="color: var(--primary); -webkit-text-fill-color: var(--primary); text-shadow: var(--neon-glow);">VORTEX</h1>
+        
+        <div class="hero-sub" id="typewriter"></div>
+        
+        <button class="btn-cyber">INITIALIZE DEFENSE</button>
     </section>
 
-    <!-- SERVIÇOS -->
-    <section id="servicos">
-        <h2 class="section-title hidden">NOSSOS SERVIÇOS</h2>
-        <div class="services-grid">
-            <!-- Card 1 -->
-            <div class="service-card hidden" style="transition-delay: 100ms;">
-                <h3>Penetration Testing</h3>
-                <p>Simulação de ataques cibernéticos para identificar vulnerabilidades em sua infraestrutura antes que invasores reais o façam.</p>
-            </div>
-            <!-- Card 2 -->
-            <div class="service-card hidden" style="transition-delay: 200ms;">
-                <h3>Security Monitoring</h3>
-                <p>Monitoramento 24/7 de seus sistemas utilizando Inteligência Artificial para detectar anomalias em tempo real.</p>
-            </div>
-            <!-- Card 3 -->
-            <div class="service-card hidden" style="transition-delay: 300ms;">
-                <h3>Data Recovery</h3>
-                <p>Protocolos avançados de recuperação de dados em caso de ransomwares ou falhas catastrophicas. Seu dados são nossa prioridade.</p>
-            </div>
+    <!-- DASHBOARD STATS -->
+    <section id="dashboard" class="dashboard">
+        <div class="stat-card">
+            <div class="stat-number">99.9%</div>
+            <div class="stat-label">Uptime Garantido</div>
+            <div style="margin-top:10px; height: 2px; background: linear-gradient(90deg, var(--primary), transparent); width: 50%;"></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">0</div>
+            <div class="stat-label">Brechas Detectadas (Último Scan)</div>
+            <div style="margin-top:10px; height: 2px; background: linear-gradient(90deg, var(--danger), transparent); width: 50%;"></div>
         </div>
     </section>
 
-    <!-- SOBRE -->
-    <section id="sobre">
-        <h2 class="section-title hidden">SOBRENÓS</h2>
-        <div class="hidden" style="text-align: center; max-width: 800px; margin: 0 auto;">
-            <p style="font-size: 1.2rem; line-height: 1.6;">
-                A AegisVortex nasceu no centro da dark web, mas hoje atua na defesa das maiores corporações do mundo.
+    <div class
