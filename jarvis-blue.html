@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Alex</title>
+  <title>JARVIS // Núcleo Azul</title>
   <style>
     :root{
       --bg0:#030612;
@@ -498,7 +498,7 @@
   <!-- Boot / intro -->
   <div class="boot" id="boot">
     <div class="bootBox">
-      <div class="bootTitle">Alex / BLUE CORE</div>
+      <div class="bootTitle">JARVIS / BLUE CORE</div>
       <div class="bootSub">
         Inicializando interface neural...
         <br/>Render de HUD • Osciladores ópticos • Sincronização de telemetria
@@ -513,7 +513,7 @@
     <header>
       <div class="brand">
         <div class="top">
-          <div class="jarvis">Alex</div>
+          <div class="jarvis">JARVIS</div>
           <div class="status">Núcleo online • Azul claro</div>
         </div>
       </div>
@@ -550,7 +550,7 @@
         </div>
       </section>
 
-      <aside class="consoleCard" aria-label="Console do Alex">
+      <aside class="consoleCard" aria-label="Console do JARVIS">
         <div class="consoleTop">
           <div class="title"><span class="lamp"></span>CONSOLE / SYNTH UI</div>
           <div style="color: rgba(111,166,207,.95); font-size:12px;">#LIVE</div>
@@ -619,7 +619,7 @@
             boot.classList.add('hidden');
             window.__jarvisReady = true;
             initTelemetry();
-            pushConsoleLine('sys', 'Sistema pronto. Alex está aguardando comandos.');
+            pushConsoleLine('sys', 'Sistema pronto. JARVIS está aguardando comandos.');
           }, 350);
         }
       }, 520);
@@ -720,9 +720,74 @@
       return (s || '').toString().trim().toLowerCase();
     }
 
+    /**
+     * Chamada para LLM (client-side).
+     * Importante: não coloque sua API Key diretamente no frontend em produção.
+     * Este demo espera que você configure um endpoint no browser:
+     *   window.__jarvisLLMEndpoint = 'https://SEU_BACKEND/chat/completions'
+     *
+     * Formato esperado do backend (demo):
+     *   POST { input: string, model?: string }
+     * e responde JSON:
+     *   { output: string } (ou { text } / { result })
+     */
+
+    async function callLLM(question){
+      const ep = window.__jarvisLLMEndpoint || 'https://integrate.api.nvidia.com/v1/chat/completions';
+
+      if(!ep){
+        typeReply('LLM endpoint não configurado. Abra o console e defina: window.__jarvisLLMEndpoint = "SEU_ENDPOINT"', 'warn');
+        return;
+      }
+      const q = (question || '').trim();
+      if(!q){
+        typeReply('Digite uma pergunta após: "llm" / "pergunta" / "ask"', 'warn');
+        return;
+      }
+
+      pushConsoleLine('sys', 'Conectando ao núcleo de IA (demo)...');
+      try{
+        const res = await fetch(ep, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + (window.__jarvisLLMApiKey || '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')
+          },
+
+          body: JSON.stringify({ input: q, model: window.__jarvisLLMModel || 'google/gemma-2-9b-it' })
+        });
+
+
+        if(!res.ok){
+          const txt = await res.text().catch(()=> '');
+          throw new Error('HTTP ' + res.status + (txt ? (' - ' + txt.slice(0,120)) : ''));
+        }
+
+        const data = await res.json();
+        const out = (data && (data.output ?? data.text ?? data.result)) || '';
+        if(!out){
+          typeReply('Resposta vazia do LLM (verifique o backend).', 'warn');
+          return;
+        }
+        typeReply(out, 'sys');
+      } catch (err){
+        typeReply('Falha ao chamar LLM: ' + (err && err.message ? err.message : String(err)), 'warn');
+      }
+    }
+
+
     function handleCommand(raw){
       const text = normalize(raw);
       if(!text) return;
+
+      // LLM entrypoint (client-side). Uses an endpoint you configure via window.__jarvisLLMEndpoint.
+      // Usage: "llm SUA PERGUNTA" / "pergunta SUA PERGUNTA" / "ask SUA PERGUNTA"
+      if(text.startsWith('llm ') || text.startsWith('pergunta ') || text.startsWith('ask ')){
+        const q = raw.replace(/^(llm\s+|pergunta\s+|ask\s+)/i, '').trim();
+        callLLM(q);
+        return;
+      }
+
 
       // Show user cmd
       pushConsoleLine('cmd', `CMD ▶ ${raw}`);
@@ -786,3 +851,4 @@
   </script>
 </body>
 </html>
+
