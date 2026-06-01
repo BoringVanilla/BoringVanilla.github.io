@@ -754,7 +754,7 @@
             'Authorization': 'Bearer ' + (window.__jarvisLLMApiKey || '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')
           },
           body: JSON.stringify({
-            model: window.__jarvisLLMModel || 'google/gemma-2-9b-it',
+            model: window.__jarvisLLMModel || 'google/gemma-3n-e4b-it',
             messages: [
               { role: 'system', content: window.__jarvisLLMSystemPrompt || 'Você é o JARVIS. Responda em português, com tom futurista e objetivo. Caso o usuário peça algo perigoso, recuse com segurança.' },
               { role: 'user', content: q }
