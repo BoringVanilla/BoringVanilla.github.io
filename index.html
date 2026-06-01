@@ -1,124 +1,299 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="logo.png">
-    <link rel="stylesheet" href="sobre.css">
-    <title>Matheus - Sobre Mim</title>
+    <title>AegisVortex - Cyber Defense</title>
+    <style>
+        :root {
+            --bg-dark: #030508;
+            --bg-panel: #0a0f14;
+            --primary: #00ff41;
+            --secondary: #00e5ff;
+            --danger: #ff0055;
+            --text-main: #cfcfcf;
+            --text-muted: #556;
+            --font-main: 'Courier New', monospace;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: var(--bg-dark); color: var(--text-main); font-family: var(--font-main); overflow-x: hidden; }
+
+        /* CURSOR */
+        #cursor { position: fixed; width: 20px; height: 20px; border: 1px solid var(--primary); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); mix-blend-mode: difference; }
+        #cursor::after { content: ''; position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: var(--danger); transform: translate(-50%, -50%); border-radius: 50%; }
+
+        /* ANIMAÇÕES */
+        @keyframes scanline { 0% { top: -10%; } 100% { top: 110%; } }
+        @keyframes glitch-anim { 0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); } 20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); } 40% { clip-path: inset(40% 0 50% 0); transform: translate(-2px, 2px); } 60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); } 80% { clip-path: inset(10% 0 70% 0); transform: translate(-1px, 1px); } 100% { clip-path: inset(30% 0 50% 0); transform: translate(0); } }
+        @keyframes matrixRain { 0% { background-position: 0 0; } 100% { background-position: 0 100%; } }
+        @keyframes typing { from { width: 0; } to { width: 100%; } }
+        @keyframes blink { 50% { border-color: transparent; } }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+
+        /* LOADER */
+        #loader { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease, visibility 0.8s ease; }
+        #loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .loader-box { border: 1px solid var(--primary); padding: 40px; width: 450px; background: #000; position: relative; overflow: hidden; box-shadow: 0 0 30px rgba(0, 255, 65, 0.1); }
+        .loader-text { color: var(--primary); font-size: 1.2rem; border-right: 2px solid var(--primary); white-space: nowrap; overflow: hidden; display: inline-block; animation: typing 2s steps(25) forwards, blink 0.5s step-end infinite; width: 25ch; }
+        .loader-bar { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--primary); width: 0%; box-shadow: 0 0 10px var(--primary); }
+        .skip-btn { position: absolute; bottom: 20px; right: 20px; background: transparent; border: 1px solid #333; color: #555; padding: 10px 20px; font-family: inherit; font-size: 0.8rem; cursor: pointer; transition: 0.3s; }
+        .skip-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+        /* SCROLL PROGRESS */
+        #progressBar { position: fixed; top: 0; left: 0; height: 2px; background: linear-gradient(90deg, var(--primary), var(--secondary)); width: 0%; z-index: 10000; box-shadow: 0 0 10px var(--primary); }
+
+        /* SCANLINE */
+        .scanline-overlay { position: fixed; left: 0; width: 100%; height: 5px; background: rgba(0, 255, 65, 0.05); box-shadow: 0 0 15px var(--primary); z-index: 900; animation: scanline 4s linear infinite; pointer-events: none; }
+
+        /* MATRIX BG */
+        #matrix-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent 0%, var(--bg-dark) 100%), repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 65, 0.03) 3px); z-index: -2; background-size: 100% 100%, 100% 4px; animation: matrixRain 20s linear infinite; pointer-events: none; }
+
+        /* MAIN CONTENT */
+        #main-content { opacity: 0; transition: opacity 1s ease; }
+        #main-content.visible { opacity: 1; }
+
+        /* HEADER */
+        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 50px; background: rgba(3, 5, 8, 0.9); backdrop-filter: blur(5px); position: fixed; width: 100%; z-index: 100; border-bottom: 1px solid rgba(0,255,65,0.1); }
+        .logo { font-size: 1.5rem; font-weight: bold; letter-spacing: 3px; text-transform: uppercase; }
+        .logo span { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
+        nav a { color: var(--text-muted); text-decoration: none; margin-left: 30px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
+        nav a:hover { color: var(--secondary); text-shadow: 0 0 10px var(--secondary); letter-spacing: 2px; }
+
+        /* HERO */
+        .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; perspective: 1000px; padding-top: 60px; }
+        .hero-title { font-size: 8rem; line-height: 1; background: linear-gradient(180deg, #fff, #555); -webkit-background-clip: text; -webkit-text-fill-color: transparent; position: relative; }
+        .hero-title-2 { font-size: 8rem; line-height: 1; color: var(--primary); -webkit-text-fill-color: var(--primary); text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary); }
+        .glitch-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; }
+        .hero:hover .glitch-layer:nth-child(2) { color: var(--danger); animation: glitch-anim 0.3s infinite; opacity: 0.8; }
+        .hero:hover .glitch-layer:nth-child(3) { color: var(--secondary); animation: glitch-anim 0.3s infinite reverse; opacity: 0.8; }
+        .hero-sub { color: var(--primary); font-size: 1.2rem; margin-top: 20px; }
+        .btn-cyber { margin-top: 40px; padding: 15px 50px; background: transparent; border: 1px solid var(--primary); color: var(--primary); font-family: inherit; font-size: 1rem; letter-spacing: 2px; position: relative; overflow: hidden; transition: 0.3s; cursor: pointer; }
+        .btn-cyber::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(0,255,65,0.3), transparent); transition: 0.5s; }
+        .btn-cyber:hover::before { left: 100%; }
+        .btn-cyber:hover { background: var(--primary); color: #000; box-shadow: 0 0 30px rgba(0,255,65,0.4); }
+
+        /* DASHBOARD */
+        .dashboard { padding: 100px 50px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .stat-card { background: var(--bg-panel); border: 1px solid #222; padding: 30px; position: relative; transition: 0.3s; }
+        .stat-card:hover { transform: translateY(-5px); border-color: var(--primary); }
+        .stat-number { font-size: 3rem; color: var(--text-main); font-weight: bold; animation: pulse 2s infinite; }
+        .stat-label { color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; margin-top: 10px; }
+
+        /* SERVICES */
+        .services-section { padding: 100px 50px; max-width: 1200px; margin: 0 auto; }
+        .section-title { font-size: 2.5rem; text-align: center; margin-bottom: 50px; }
+        .section-title::after { content: ''; display: block; width: 50px; height: 2px; background: var(--primary); margin: 10px auto 0; }
+        .flip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; perspective: 1000px; }
+        .flip-card { height: 350px; transform-style: preserve-3d; transition: transform 0.8s; cursor: pointer; }
+        .flip-card:hover { transform: rotateY(180deg); }
+        .flip-card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
+        .flip-front, .flip-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; border: 1px solid #222; background: var(--bg-panel); }
+        .flip-back { transform: rotateY(180deg); border-color: var(--secondary); background: rgba(0, 229, 255, 0.05); }
+        .icon-cyber { font-size: 4rem; color: var(--primary); margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
+        .flip-back h3 { color: var(--secondary); margin-bottom: 15px; }
+
+        /* CONTACT */
+        .contact-section { padding: 100px 50px; text-align: center; max-width: 800px; margin: 0 auto; }
+        .input-cyber { width: 100%; max-width: 400px; padding: 15px; margin: 10px; background: #000; border: 1px solid #333; color: var(--primary); font-family: inherit; outline: none; transition: 0.3s; }
+        .input-cyber:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0,255,65,0.2); }
+        .submit-cyber { margin-top: 10px; padding: 15px 50px; background: transparent; border: 1px solid var(--primary); color: var(--primary); font-family: inherit; font-size: 1rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s; }
+        .submit-cyber:hover { background: var(--primary); color: #000; box-shadow: 0 0 30px rgba(0,255,65,0.4); }
+
+        /* FOOTER */
+        footer { padding: 50px; text-align: center; color: #444; font-size: 0.8rem; border-top: 1px solid #111; margin-top: 50px; }
+        footer span { color: var(--primary); }
+
+        @media (max-width: 768px) {
+            .hero-title, .hero-title-2 { font-size: 4rem; }
+            .dashboard { grid-template-columns: 1fr; }
+            header { padding: 20px; }
+            nav { display: none; }
+        }
+    </style>
 </head>
 <body>
-                                                        <h1 class="titulo">Sobre mim</h1>
-    <p>Eu sou Matheus tenho 15 anos e tenho conhecimentos em: docker, homelab, configurações de ip e port forwarding,<a href="jarvis-blue.html">Jarvis</a>, proxy reverso, paineis de jogo, conhecimento de terminal de linux e cyber segurança.</p>
-    <p>Estou em busca de criar minha própria empresa de hospedagem para criar um servidor de jogo com minigames, sistemas de vips ou tags de permissão como Dono, Admin, Moderador etc. Em quanto isso estou criando HOME LAB.</p>
-    
-    <div class="empresa">
-        <h3><a href="black.html">AegisVortex</a></h3>
-        
-        <p>🌐 História da Empresa</p>
-        
-        <p>A AegisVortex nasceu em 2028, quando um grupo de ex-especialistas em segurança digital de grandes bancos e agências governamentais percebeu que ataques cibernéticos estavam se tornando mais inteligentes que as defesas tradicionais.</p>
-        
-        <p>Após um grande vazamento global de dados conhecido como "Black Spiral", que comprometeu milhões de usuários, os fundadores decidiram criar uma solução que não apenas reagisse a ataques, mas os previsse antes mesmo de acontecerem.</p>
-        
-        <p>Assim surgiu o conceito do "Vortex Shield" — um sistema baseado em inteligência artificial capaz de detectar padrões invisíveis de ameaças e criar uma defesa adaptativa em tempo real.</p>
-        
-        <p>Hoje, a <a href="https://maps.app.goo.gl/PgxfJiu7uHFUNtaAA">AegisVortex</a> protege empresas, governos e até cidades inteligentes, sendo conhecida como "a muralha invisível da internet".</p>
-        
-        <p>🧠 Missão, Visão e Valores</p>
-        
-        <p><strong>Missão:</strong><br>Proteger o mundo digital antecipando ameaças antes que elas existam.</p>
-        
-        <p><strong>Visão:</strong><br>Ser líder global em cibersegurança preditiva até 2035.</p>
-        
-        <p><strong>Valores:</strong></p>
-        <p>Inovação contínua | Ética digital | Transparência | Resposta rápida | Confiança total</p>
-        
-        <p>🏗️ Estrutura da Empresa</p>
-        
-        <p>1. <strong>CEO (Diretor Executivo)</strong><br>Responsável pela visão estratégica e crescimento global.</p>
-        
-        <p>2. <strong>CTO (Diretor de Tecnologia)</strong><br>Lidera o desenvolvimento de soluções e inovação.</p>
-        
-        <p>3. <strong>CISO (Chief Information Security Officer)</strong><br>Responsável pela segurança interna e dos clientes.</p>
-        
-        <p>🔧 Departamentos</p>
-        
-        <p>🔹 <strong>Pesquisa & Desenvolvimento (R&D)</strong><br>Cria novas tecnologias de defesa cibernética.</p>
-        
-        <p>🔹 <strong>Threat Intelligence</strong><br>Monitora ameaças globais em tempo real.</p>
-        
-        <p>🔹 <strong>Engenharia de Segurança</strong><br>Desenvolve sistemas e ferramentas de proteção.</p>
-        
-        <p>🔹 <strong>Operações de Segurança (SOC)</strong><br>Equipe que responde a ataques 24/7.</p>
-        
-        <p>🔹 <strong>Comercial & Marketing</strong><br>Vendas, branding e relacionamento com clientes.</p>
-        
-        <p>🔹 <strong>Suporte Técnico</strong><br>Atendimento e resolução de problemas.</p>
-        
-        <p>🛡️ Produto Principal</p>
-        <p><strong>Vortex Shield X</strong></p>
-        
-        <p><strong>Descrição:</strong><br>Uma plataforma de cibersegurança baseada em IA que prevê, detecta e neutraliza ameaças digitais antes que causem danos.</p>
-        
-        <p><strong>Principais Funcionalidades:</strong></p>
-        <p>🔍 Análise preditiva de ataques | 🤖 IA adaptativa | 🌐 Monitoramento 24/7 | 🔐 Anti-ransomware/phishing | 📊 Dashboard real-time</p>
-        
-        <p>🚀 <strong>Diferencial Competitivo</strong></p>
-        <p>Enquanto outras empresas reagem a ataques, a AegisVortex antecipa o comportamento dos hackers, criando defesas antes da invasão acontecer.</p>
-        
-        <p>🎯 <strong>Slogan</strong></p>
-        <p>"Protegendo o amanhã, <a href="sobre.html">hoje</a>." </p>
-    </div>
-    
-    <footer>
-        <h2 class="subtitulo">Vamos mostrar meu escritorio</h2>
-        <p>Meu escritório fica</p>
-        <figure>
-            <img src="Escritorio.png" alt="Meu Escritorio">
-            <figcaption>Meu Escritório</figcaption>
-        </figure>
-    </footer>  
-    <h2 class="subtitulo">Difereciais</h2>
-    
-    <ul>
-        <li>Menor preço do mercado</li>
-        <li>Cobrimos qualquer oferta</li>
-        <li>Aceitamos todos os cartões e cryptos</li>
-        <li>Maior escola de cursos do mundo</li>
-        <li>Melhores professores do mundo</li>
-        <li>Atendimento 24/7</li>
-    </ul>
-    <figure class="fundadores">
-        <img src="data:image/jpeg;base64,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" alt="">
-        <figcaption>
-            Criador da iniciativa Cyber 
-        </figcaption>
-    </figure>
+    <!-- CURSOR -->
+    <div id="cursor"></div>
 
-<!--contato-->
-<h2 class="subtitulo"></h2>
-<h3>Correspondencia</h3>
-<small>(24/7)</small>
-<address>
-    AegisVortex
-    <br>
-    Rua Aclimação da Silva 838, 3* andar
-    <br>
-    Aclimação
-    <br>
-    São Paulo
-    <br>
-    </address>
+    <!-- SCANLINE -->
+    <div class="scanline-overlay"></div>
 
-    <div id="aba-contato-simples" class="contato-aba">
-        <h2 class="subtitulo">Contato</h2>
-        <p><strong>Email:</strong> contato@aegisvortex.com</p>
-        <p><strong>Telefone:</strong> (11) 99999-9999</p>
-        <p>Entre em contato 24/7!</p>
+    <!-- LOADER -->
+    <div id="loader">
+        <div class="loader-box">
+            <div class="loader-text">> EXECUTING AEGIS PROTOCOL...</div>
+            <div class="loader-bar" id="bar"></div>
+        </div>
+        <button class="skip-btn" id="skipBtn">[ SKIP INTRO ]</button>
     </div>
 
+    <!-- BG MATRIX -->
+    <div id="matrix-bg"></div>
 
+    <!-- SCROLL PROGRESS BAR -->
+    <div id="progressBar"></div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main-content">
+        <header>
+            <div class="logo">AEGIS<span>VORTEX</span></div>
+            <nav>
+                <a href="#home">HOME</a>
+                <a href="#dashboard">DASHBOARD</a>
+                <a href="#services">SERVICES</a>
+                <a href="#contact">CONTACT</a>
+            </nav>
+        </header>
+
+        <section id="home" class="hero">
+            <div style="position: relative;">
+                <h1 class="hero-title">AEGIS</h1>
+                <h1 class="hero-title glitch-layer">AEGIS</h1>
+                <h1 class="hero-title glitch-layer">AEGIS</h1>
+            </div>
+            <h1 class="hero-title-2">VORTEX</h1>
+            <p class="hero-sub" id="typewriter"></p>
+            <button class="btn-cyber" id="initBtn">INITIALIZE DEFENSE</button>
+        </section>
+
+        <section id="dashboard" class="dashboard">
+            <div class="stat-card">
+                <div class="stat-number">99.9%</div>
+                <div class="stat-label">Uptime Garantido</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">0</div>
+                <div class="stat-label">Brechas Detectadas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">24/7</div>
+                <div class="stat-label">Monitoramento Ativo</div>
+            </div>
+        </section>
+
+        <section id="services" class="services-section">
+            <h2 class="section-title">NOSSOS SERVIÇOS</h2>
+            <div class="flip-grid">
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-front">
+                            <div class="icon-cyber">🛡️</div>
+                            <h3>PENETRATION TEST</h3>
+                        </div>
+                        <div class="flip-back">
+                            <h3>_ANALISE_AVANCADA</h3>
+                            <p>Simulamos ataques para identificar vulnerabilidades antes que invasores reais descubram.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-front">
+                            <div class="icon-cyber">🔒</div>
+                            <h3>ENCRYPTION</h3>
+                        </div>
+                        <div class="flip-back">
+                            <h3>_CRIPTOGRAFIA_MILITAR</h3>
+                            <p>Proteção de dados de nível militar com algoritmos pós-quânticos.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flip-card">
+                    <div class="flip-card-inner">
+                        <div class="flip-front">
+                            <div class="icon-cyber">👁️</div>
+                            <h3>MONITORING</h3>
+                        </div>
+                        <div class="flip-back">
+                            <h3>_VIGILANCIA_CONTINUA</h3>
+                            <p>IA monitorando seus sistemas 24/7 para detectar anomalias em tempo real.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="contact" class="contact-section">
+            <h2 class="section-title">CONTATO SEGURO</h2>
+            <form id="contactForm" onsubmit="return false;">
+                <input type="text" class="input-cyber" name="name" placeholder="SEU NOME" required>
+                <input type="email" class="input-cyber" name="email" placeholder="SEU EMAIL" required>
+                <input type="text" class="input-cyber" name="subject" placeholder="ASSUNTO" required>
+                <input type="text" class="input-cyber" name="message" placeholder="MENSAGEM" required>
+                <button type="submit" class="submit-cyber">ENVIAR</button>
+                <p style="max-width:520px;margin:18px auto 0;color:#3a3a3a;">
+                    (Demo) Nenhuma mensagem é enviada — apenas simulação.
+                </p>
+            </form>
+        </section>
+
+        <footer>
+            <div>AEGIS<span>VORTEX</span> • Cyber Defense • <span id="year"></span></div>
+        </footer>
+    </div>
+
+    <script>
+        // Cursor
+        const cursor = document.getElementById('cursor');
+        window.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        // Loader + reveal
+        const loader = document.getElementById('loader');
+        const mainContent = document.getElementById('main-content');
+        const bar = document.getElementById('bar');
+        const skipBtn = document.getElementById('skipBtn');
+
+        let progress = 0;
+        const interval = setInterval(() => {
+            progress += 2;
+            bar.style.width = progress + '%';
+            if (progress >= 100) {
+                clearInterval(interval);
+                loader.classList.add('hidden');
+                mainContent.classList.add('visible');
+            }
+        }, 25);
+
+        skipBtn.addEventListener('click', () => {
+            clearInterval(interval);
+            bar.style.width = '100%';
+            loader.classList.add('hidden');
+            mainContent.classList.add('visible');
+        });
+
+        // Progress bar
+        const progressBar = document.getElementById('progressBar');
+        window.addEventListener('scroll', () => {
+            const doc = document.documentElement;
+            const scrollTop = doc.scrollTop;
+            const scrollHeight = doc.scrollHeight - doc.clientHeight;
+            const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+            progressBar.style.width = pct + '%';
+        }, { passive: true });
+
+        // Typewriter
+        const typewriterEl = document.getElementById('typewriter');
+        const text = 'SECURE YOUR SYSTEMS • DETECT THREATS • RESPOND FAST';
+        let idx = 0;
+        function tick() {
+            typewriterEl.textContent = text.slice(0, idx);
+            idx++;
+            if (idx <= text.length) setTimeout(tick, 35);
+        }
+        setTimeout(tick, 900);
+
+        // Button demo
+        const initBtn = document.getElementById('initBtn');
+        initBtn.addEventListener('click', () => {
+            alert('AEGIS PROTOCOL INITIALIZED (demo)');
+        });
+
+        // Footer year
+        document.getElementById('year').textContent = new Date().getFullYear();
+    </script>
 </body>
-
 </html>
