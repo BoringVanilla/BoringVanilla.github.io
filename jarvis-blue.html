@@ -780,13 +780,21 @@
       const text = normalize(raw);
       if(!text) return;
 
-      // LLM entrypoint (client-side). Uses an endpoint you configure via window.__jarvisLLMEndpoint.
-      // Usage: "llm SUA PERGUNTA" / "pergunta SUA PERGUNTA" / "ask SUA PERGUNTA"
+      // LLM entrypoint (client-side).
+      // Usage:
+      //  - "llm SUA PERGUNTA"  (ou "pergunta ..." / "ask ...")
+      //  - ou se o usuário digitar apenas uma frase, tenta como LLM (demo).
       if(text.startsWith('llm ') || text.startsWith('pergunta ') || text.startsWith('ask ')){
         const q = raw.replace(/^(llm\s+|pergunta\s+|ask\s+)/i, '').trim();
         callLLM(q);
         return;
       }
+
+      // Se não reconheceu nenhum comando padrão, tenta enviar como pergunta para o LLM (demo).
+      // (Mantém comandos do sistema abaixo com matches explícitos.)
+      callLLM(raw);
+      return;
+
 
 
       // Show user cmd
