@@ -3,180 +3,418 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de DNS SRV</title>
+    <title>Configuração SRV no Cloudflare - Passo a Passo</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --primary: #f38020; /* Cor Laranja Cloudflare */
+            --primary-hover: #d67215;
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --text: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --success: #22c55e;
+        }
+
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            padding: 20px;
         }
+
         .container {
-            background-color: #1e293b;
+            background-color: var(--card-bg);
             padding: 2rem;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
         }
-        h1 { text-align: center; margin-bottom: 1.5rem; color: #6366f1; }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; color: #94a3b8; font-size: 0.9rem; }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .subtitle {
+            text-align: center;
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        /* Passo a Passo */
+        .step {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .step-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .step-number {
+            background: var(--primary);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 0.9rem;
+        }
+
+        .step-title {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .step-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            line-height: 1.5;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.4rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
         input, select {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border-radius: 6px;
-            border: 1px solid #334155;
-            background-color: #0f172a;
+            border: 1px solid var(--border);
+            background-color: var(--card-bg);
             color: white;
-            font-size: 1rem;
+            font-size: 0.95rem;
+            margin-bottom: 10px;
         }
-        input:focus, select:focus { outline: none; border-color: #6366f1; }
-        .row { display: flex; gap: 10px; }
-        .col { flex: 1; }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #6366f1;
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .result-box {
+            background: #0a0a0a;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--success);
+            word-break: break-all;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .result-box.show {
+            display: block;
+        }
+
+        .btn-generate {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            transition: all 0.3s;
+        }
+
+        .btn-generate:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .copy-btn-small {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.75rem;
+            margin-left: 8px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 2rem;
+        }
+
+        .btn-nav {
+            padding: 10px 20px;
+            background: var(--primary);
             color: white;
             border: none;
             border-radius: 6px;
-            font-size: 1rem;
-            font-weight: bold;
             cursor: pointer;
-            margin-top: 10px;
+            font-weight: bold;
         }
-        button:hover { background-color: #4f46e5; }
-        .result-container {
-            margin-top: 1.5rem;
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            border-radius: 6px;
-            padding: 1rem;
-            display: none;
+
+        .btn-nav:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
         }
-        .result-label {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 8px;
+
+        .info-box {
+            background: rgba(243, 128, 32, 0.1);
+            border-left: 3px solid var(--primary);
+            padding: 10px;
+            margin-bottom: 1rem;
             font-size: 0.85rem;
-            color: #94a3b8;
         }
-        pre { margin: 0; font-family: monospace; color: #22c55e; word-break: break-all; font-size: 0.9rem; }
-        .copy-btn { background: transparent; border: 1px solid #334155; color: #94a3b8; padding: 4px 8px; font-size: 0.8rem; width: auto; margin: 0; }
-        .copy-btn:hover { background: #334155; color: white; }
-        .helper { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>Gerador de DNS SRV</h1>
+    <h1>Configurar SRV no Cloudflare</h1>
+    <p class="subtitle">Passo a passo para conectar seu jogo</p>
 
-    <div class="form-group">
-        <label>Domínio Principal</label>
-        <input type="text" id="domain" placeholder="ex: jogo.com">
+    <!-- Inputs Iniciais (sempre visíveis para referência) -->
+    <div class="info-box">
+        <strong>Domínio Principal:</strong> <span id="mainDomainDisplay">jogo.com</span><br>
+        <strong>IP do Servidor:</strong> <span id="mainIpDisplay">192.168.1.10</span><br>
+        <strong>Porta do Jogo:</strong> <span id="mainPortDisplay">25565</span>
     </div>
 
-    <div class="form-group">
-        <label>Subdomínio Desejado</label>
-        <input type="text" id="subdomain" placeholder="ex: mc (vai criar mc.jogo.com)">
-        <div class="helper">Deixe vazio se quiser usar só o domínio principal</div>
-    </div>
-
-    <div class="row">
-        <div class="col">
-            <div class="form-group">
-                <label>Porta</label>
-                <input type="number" id="port" placeholder="25565">
-            </div>
+    <!-- PASSO 1: REGISTRO A -->
+    <div class="step" id="step1">
+        <div class="step-header">
+            <div class="step-number">1</div>
+            <div class="step-title">Registro "A" (Aponta para o IP)</div>
         </div>
-        <div class="col">
-            <div class="form-group">
-                <label>Protocolo</label>
-                <select id="protocol">
-                    <option value="tcp">TCP</option>
-                    <option value="udp">UDP</option>
-                </select>
-            </div>
+        <div class="step-desc">
+            Crie um subdomínio interno para seu servidor. Não precisa ser complexo, use algo fácil.<br>
+            <em>Exemplo: srv.jogo.com -> 192.168.1.10</em>
         </div>
+
+        <label>Nome do Subdomínio (.Hostname )</label>
+        <input type="text" id="step1Host" placeholder="Ex: srv">
+
+        <label>IP do Servidor</label>
+        <input type="text" id="step1Ip" placeholder="Ex: 192.168.1.10">
+
+        <button class="btn-generate" onclick="generateStep1()">Gerar Passo 1</button>
+
+        <div class="result-box" id="step1Result"></div>
     </div>
 
-    <div class="form-group">
-        <label>Serviço (Tipo)</label>
-        <select id="service">
-            <option value="_minecraft._tcp">Minecraft (Java)</option>
-            <option value="_minecraft._udp">Minecraft (Bedrock)</option>
-            <option value="_teamspeak3._tcp">TeamSpeak 3</option>
-            <option value="_ts3._udp">TS3 (Alternativo)</option>
-            <option value="_http._tcp">HTTP / Site</option>
-            <option value="_ftp._tcp">FTP</option>
-            <option value="_generic._tcp">Genérico (_servico)</option>
+    <!-- PASSO 2: CNAME (Opcional) -->
+    <div class="step" id="step2">
+        <div class="step-header">
+            <div class="step-number">2</div>
+            <div class="step-title">CNAME (Opcional)</div>
+        </div>
+        <div class="step-desc">
+            Você pode criar um CNAME para o serviço apontar para o subdomínio criado acima.<br>
+            Isso facilita o redirecionamento futuro. Se preferir, pule para o Passo 3.<br>
+            <em>Exemplo: gameserver.jogo.com -> srv.jogo.com</em>
+        </div>
+
+        <label>Novo Subdomínio</label>
+        <input type="text" id="step2Subdomain" placeholder="Ex: gameserver">
+
+        <label>Aponta para (o hostname do Passo 1)</label>
+        <input type="text" id="step2Target" placeholder="srv" readonly>
+
+        <button class="btn-generate" onclick="generateStep2()">Gerar Passo 2</button>
+
+        <div class="result-box" id="step2Result"></div>
+    </div>
+
+    <!-- PASSO 3: SRV -->
+    <div class="step" id="step3">
+        <div class="step-header">
+            <div class="step-number">3</div>
+            <div class="step-title">Registro SRV (O Serviço)</div>
+        </div>
+        <div class="step-desc">
+            finalmente, configure o SRV para que quando as pessoas acessem o serviço, sejam direcionadas corretamente.<br>
+            <em>Exemplo: _minecraft._tcp.jogo.com -> srv.jogo.com:25565</em>
+        </div>
+
+        <label>Tipo de Serviço (Service)</label>
+        <select id="step3Service">
+            <option value="_minecraft._tcp">Minecraft Java (_minecraft._tcp)</option>
+            <option value="_minecraft._udp">Minecraft Bedrock (_minecraft._udp)</option>
+            <option value="_teamspeak3._tcp">TeamSpeak 3 (_teamspeak3._tcp)</option>
+            <option value="_garrysmod._tcp">Garry's Mod</option>
+            <option value="_rust._tcp">Rust</option>
+            <option value="_FiveM._tcp">FiveM (GTA V)</option>
+            <option value="_ragefour._mta">MTA:SA</option>
+            <option value="_samp._udp">SA-MP</option>
+            <option value="_http._tcp">HTTP</option>
+            <option value="custom">Personalizado...</option>
         </select>
+
+        <label>Porta</label>
+        <input type="number" id="step3Port" placeholder="25565">
+
+        <label>Prioridade (Priority)</label>
+        <input type="number" id="step3Priority" value="0">
+
+        <label>Peso (Weight)</label>
+        <input type="number" id="step3Weight" value="5">
+
+        <button class="btn-generate" onclick="generateStep3()">Gerar Passo 3</button>
+
+        <div class="result-box" id="step3Result"></div>
     </div>
 
-    <div class="form-group">
-        <label>IP ou Host de Destino</label>
-        <input type="text" id="target" placeholder="192.168.1.10">
-    </div>
-
-    <button onclick="generateSRV()">Gerar SRV</button>
-
-    <div class="result-container" id="resultBox">
-        <div class="result-label">
-            <span>Código gerado:</span>
-            <button class="copy-btn" onclick="copyToClipboard()">Copiar</button>
+    <!-- Resumo Final -->
+    <div class="step" style="border-color: var(--success);">
+        <div class="step-header">
+            <div class="step-title" style="color: var(--success);">Resumo para o Cloudflare</div>
         </div>
-        <pre id="output"></pre>
+        <div class="step-desc">
+            Copie cada linha gerada nos passos acima e cole no DNS do Cloudflare.
+        </div>
+        <pre id="finalSummary" style="font-family: monospace; font-size: 0.8rem; color: #aaa; white-space: pre-wrap;"></pre>
     </div>
+
 </div>
 
 <script>
-    function generateSRV() {
-        const domain = document.getElementById('domain').value.trim();
-        const subdomain = document.getElementById('subdomain').value.trim();
-        const port = document.getElementById('port').value;
-        const protocol = document.getElementById('protocol').value;
-        const service = document.getElementById('service').value.split('.'); // Pega serviço e protocolo
-        const target = document.getElementById('target').value.trim();
+    // Variáveis globais
+    let step1Host = '';
+    let step1Ip = '';
+    let domain = 'jogo.com'; // você pode mudar isso ou adicionar um campo
 
-        if (!domain || !port || !target) {
-            alert("Preencha: Domínio, Porta e IP/Host de Destino!");
+    // AtualizaDisplay
+    function updateDisplays() {
+        document.getElementById('mainDomainDisplay').innerText = domain;
+        document.getElementById('mainIpDisplay').innerText = step1Ip || '(aguarde passo 1)';
+        document.getElementById('mainPortDisplay').innerText = document.getElementById('step3Port').value || '25565';
+        
+        // Atualiza o alvo do passo 2 com o host do passo 1
+        if(step1Host) {
+            document.getElementById('step2Target').value = step1Host;
+        }
+    }
+
+    // PASSO 1: A Record
+    function generateStep1() {
+        const host = document.getElementById('step1Host').value.trim();
+        const ip = document.getElementById('step1Ip').value.trim();
+
+        if(!host || !ip) {
+            alert('Preencha o Hostname e o IP!');
             return;
         }
 
-        // Monta o host completo
-        // Se não colocar subdomain, usa o domínio principal
-        const host = subdomain.length > 0 
-            ? `${subdomain}.${domain}.` 
-            : `${domain}.`;
+        step1Host = host;
+        step1Ip = ip;
 
-        // Gera o tipo de serviço (ex: _minecraft._tcp)
-        const protoSelect = document.getElementById('service').value;
-        const finalServiceType = protoSelect.includes('_generic') 
-            ? `_servico.${protocol}` // Se for genérico, usa o que seleccionou (tcp/udp)
-            : protoSelect; 
-
-        // Formato Bind/CloudFlare/Generic DNS Standard:
-        // HostnameTTLClassTypePriorityWeightPortTarget
-        // Ex: _minecraft._tcp.jogo.com. 3600 IN SRV 0 5 25565 192.168.1.10.
-
-        const result = `${host} 3600 IN SRV 0 5 ${port} ${target}.`;
-
-        document.getElementById('output').innerText = result;
-        document.getElementById('resultBox').style.display = 'block';
+        const result = `${host}.${domain} 300 IN A ${ip}`;
+        
+        document.getElementById('step1Result').innerHTML = `
+            <strong>Nome:</strong> ${host}<br>
+            <strong>Conteúdo:</strong> ${ip}<br>
+            <strong>TTL:</strong> Auto (ou 300)<br>
+            <strong>Proxy:</strong> DNS Somente (Desativado - Retracted)<br>
+            <br><em>Código gerado:</em><br>
+            ${result}
+        `;
+        document.getElementById('step1Result').classList.add('show');
+        
+        updateDisplays();
+        addToSummary('PASSO 1 (A RECORD):', result);
     }
 
-    function copyToClipboard() {
-        const text = document.getElementById('output').innerText;
-        navigator.clipboard.writeText(text).then(() => {
-            alert("Copiado!");
-        });
+    // PASSO 2: CNAME Record
+    function generateStep2() {
+        const sub = document.getElementById('step2Subdomain').value.trim();
+        const target = document.getElementById('step2Target').value.trim();
+
+        if(!sub || !target) {
+            alert('Preencha o Subdomínio e o destino!');
+            return;
+        }
+
+        const result = `${sub}.${domain} 300 IN CNAME ${target}.${domain}`;
+        
+        document.getElementById('step2Result').innerHTML = `
+            <strong>Nome:</strong> ${sub}<br>
+            <strong>Alvo:</strong> ${target}.${domain}<br>
+            <strong>TTL:</strong> Auto<br>
+            <br><em>Código gerado:</em><br>
+            ${result}
+        `;
+        document.getElementById('step2Result').classList.add('show');
+        
+        addToSummary('PASSO 2 (CNAME):', result);
+    }
+
+    // PASSO 3: SRV Record
+    function generateStep3() {
+        const serviceSelect = document.getElementById('step3Service').value;
+        let service = serviceSelect;
+
+        if(serviceSelect === 'custom') {
+            // Se personalizado, assume TCP padrão se não bother
+            service = '_custom._tcp'; 
+        }
+
+        const port = document.getElementById('step3Port').value.trim();
+        const priority = document.getElementById('step3Priority').value;
+        const weight = document.getElementById('step3Weight').value;
+        
+        // O alvo é sempre o hostname do passo 1 (srv.jogo.com)
+        const targetHost = step1Host ? `${step1Host}.${domain}` : 'SEU_HOSTNAME';
+
+        if(port === '' || !step1Host) {
+            alert('Complete o Passo 1 e preencha a Porta!');
+            return;
+        }
+
+        // Formato SRV: Service.Domain. TTL IN SRV Priority Weight Port Target.
+        // Exemplo: _minecraft._tcp.jogo.com. 3600 IN SRV 0 5 25565 srv.jogo.com.
+        
+        const result = `${service}.${domain}. 3600 IN SRV ${priority} ${weight} ${port} ${targetHost}.`;
+
+        document.getElementById('step3Result').innerHTML = `
+            <strong>Serviço:</strong> ${service}<br>
+            <strong>Name/Type:</strong> ${service}.${domain}<br>
+            <strong>Prio:</strong> ${priority} | <strong>Peso:</strong> ${weight}<br>
+            <strong>Porta:</strong> ${port}<br>
+            <strong>Target:</strong> ${targetHost}<br>
+            <br><em>Código gerado:</em><br>
+            ${result}
+        `;
+        document.getElementById('step3Result').classList.add('show');
+
+        addToSummary('PASSO 3 (SRV):', result);
+    }
+
+    // Acumula resumo
+    function addToSummary(title, line) {
+        const summary = document.getElementById('finalSummary');
+        summary.innerText += title + '\n' + line + '\n\n';
     }
 </script>
 
