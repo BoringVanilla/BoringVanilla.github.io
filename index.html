@@ -1,299 +1,184 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AegisVortex - Cyber Defense</title>
+    <title>Gerador de DNS SRV</title>
     <style>
-        :root {
-            --bg-dark: #030508;
-            --bg-panel: #0a0f14;
-            --primary: #00ff41;
-            --secondary: #00e5ff;
-            --danger: #ff0055;
-            --text-main: #cfcfcf;
-            --text-muted: #556;
-            --font-main: 'Courier New', monospace;
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: var(--bg-dark); color: var(--text-main); font-family: var(--font-main); overflow-x: hidden; }
-
-        /* CURSOR */
-        #cursor { position: fixed; width: 20px; height: 20px; border: 1px solid var(--primary); border-radius: 50%; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); mix-blend-mode: difference; }
-        #cursor::after { content: ''; position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: var(--danger); transform: translate(-50%, -50%); border-radius: 50%; }
-
-        /* ANIMAÇÕES */
-        @keyframes scanline { 0% { top: -10%; } 100% { top: 110%; } }
-        @keyframes glitch-anim { 0% { clip-path: inset(20% 0 80% 0); transform: translate(-2px, 1px); } 20% { clip-path: inset(60% 0 10% 0); transform: translate(2px, -1px); } 40% { clip-path: inset(40% 0 50% 0); transform: translate(-2px, 2px); } 60% { clip-path: inset(80% 0 5% 0); transform: translate(2px, -2px); } 80% { clip-path: inset(10% 0 70% 0); transform: translate(-1px, 1px); } 100% { clip-path: inset(30% 0 50% 0); transform: translate(0); } }
-        @keyframes matrixRain { 0% { background-position: 0 0; } 100% { background-position: 0 100%; } }
-        @keyframes typing { from { width: 0; } to { width: 100%; } }
-        @keyframes blink { 50% { border-color: transparent; } }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-        @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-
-        /* LOADER */
-        #loader { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.8s ease, visibility 0.8s ease; }
-        #loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
-        .loader-box { border: 1px solid var(--primary); padding: 40px; width: 450px; background: #000; position: relative; overflow: hidden; box-shadow: 0 0 30px rgba(0, 255, 65, 0.1); }
-        .loader-text { color: var(--primary); font-size: 1.2rem; border-right: 2px solid var(--primary); white-space: nowrap; overflow: hidden; display: inline-block; animation: typing 2s steps(25) forwards, blink 0.5s step-end infinite; width: 25ch; }
-        .loader-bar { position: absolute; bottom: 0; left: 0; height: 2px; background: var(--primary); width: 0%; box-shadow: 0 0 10px var(--primary); }
-        .skip-btn { position: absolute; bottom: 20px; right: 20px; background: transparent; border: 1px solid #333; color: #555; padding: 10px 20px; font-family: inherit; font-size: 0.8rem; cursor: pointer; transition: 0.3s; }
-        .skip-btn:hover { border-color: var(--primary); color: var(--primary); }
-
-        /* SCROLL PROGRESS */
-        #progressBar { position: fixed; top: 0; left: 0; height: 2px; background: linear-gradient(90deg, var(--primary), var(--secondary)); width: 0%; z-index: 10000; box-shadow: 0 0 10px var(--primary); }
-
-        /* SCANLINE */
-        .scanline-overlay { position: fixed; left: 0; width: 100%; height: 5px; background: rgba(0, 255, 65, 0.05); box-shadow: 0 0 15px var(--primary); z-index: 900; animation: scanline 4s linear infinite; pointer-events: none; }
-
-        /* MATRIX BG */
-        #matrix-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, transparent 0%, var(--bg-dark) 100%), repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 255, 65, 0.03) 3px); z-index: -2; background-size: 100% 100%, 100% 4px; animation: matrixRain 20s linear infinite; pointer-events: none; }
-
-        /* MAIN CONTENT */
-        #main-content { opacity: 0; transition: opacity 1s ease; }
-        #main-content.visible { opacity: 1; }
-
-        /* HEADER */
-        header { display: flex; justify-content: space-between; align-items: center; padding: 20px 50px; background: rgba(3, 5, 8, 0.9); backdrop-filter: blur(5px); position: fixed; width: 100%; z-index: 100; border-bottom: 1px solid rgba(0,255,65,0.1); }
-        .logo { font-size: 1.5rem; font-weight: bold; letter-spacing: 3px; text-transform: uppercase; }
-        .logo span { color: var(--primary); text-shadow: 0 0 10px var(--primary); }
-        nav a { color: var(--text-muted); text-decoration: none; margin-left: 30px; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; }
-        nav a:hover { color: var(--secondary); text-shadow: 0 0 10px var(--secondary); letter-spacing: 2px; }
-
-        /* HERO */
-        .hero { height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; perspective: 1000px; padding-top: 60px; }
-        .hero-title { font-size: 8rem; line-height: 1; background: linear-gradient(180deg, #fff, #555); -webkit-background-clip: text; -webkit-text-fill-color: transparent; position: relative; }
-        .hero-title-2 { font-size: 8rem; line-height: 1; color: var(--primary); -webkit-text-fill-color: var(--primary); text-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary); }
-        .glitch-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; }
-        .hero:hover .glitch-layer:nth-child(2) { color: var(--danger); animation: glitch-anim 0.3s infinite; opacity: 0.8; }
-        .hero:hover .glitch-layer:nth-child(3) { color: var(--secondary); animation: glitch-anim 0.3s infinite reverse; opacity: 0.8; }
-        .hero-sub { color: var(--primary); font-size: 1.2rem; margin-top: 20px; }
-        .btn-cyber { margin-top: 40px; padding: 15px 50px; background: transparent; border: 1px solid var(--primary); color: var(--primary); font-family: inherit; font-size: 1rem; letter-spacing: 2px; position: relative; overflow: hidden; transition: 0.3s; cursor: pointer; }
-        .btn-cyber::before { content: ''; position: absolute; top: 0; left: -100%; width: 100%; height: 100%; background: linear-gradient(90deg, transparent, rgba(0,255,65,0.3), transparent); transition: 0.5s; }
-        .btn-cyber:hover::before { left: 100%; }
-        .btn-cyber:hover { background: var(--primary); color: #000; box-shadow: 0 0 30px rgba(0,255,65,0.4); }
-
-        /* DASHBOARD */
-        .dashboard { padding: 100px 50px; max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
-        .stat-card { background: var(--bg-panel); border: 1px solid #222; padding: 30px; position: relative; transition: 0.3s; }
-        .stat-card:hover { transform: translateY(-5px); border-color: var(--primary); }
-        .stat-number { font-size: 3rem; color: var(--text-main); font-weight: bold; animation: pulse 2s infinite; }
-        .stat-label { color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; margin-top: 10px; }
-
-        /* SERVICES */
-        .services-section { padding: 100px 50px; max-width: 1200px; margin: 0 auto; }
-        .section-title { font-size: 2.5rem; text-align: center; margin-bottom: 50px; }
-        .section-title::after { content: ''; display: block; width: 50px; height: 2px; background: var(--primary); margin: 10px auto 0; }
-        .flip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; perspective: 1000px; }
-        .flip-card { height: 350px; transform-style: preserve-3d; transition: transform 0.8s; cursor: pointer; }
-        .flip-card:hover { transform: rotateY(180deg); }
-        .flip-card-inner { position: relative; width: 100%; height: 100%; transform-style: preserve-3d; }
-        .flip-front, .flip-back { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; border: 1px solid #222; background: var(--bg-panel); }
-        .flip-back { transform: rotateY(180deg); border-color: var(--secondary); background: rgba(0, 229, 255, 0.05); }
-        .icon-cyber { font-size: 4rem; color: var(--primary); margin-bottom: 20px; animation: float 3s ease-in-out infinite; }
-        .flip-back h3 { color: var(--secondary); margin-bottom: 15px; }
-
-        /* CONTACT */
-        .contact-section { padding: 100px 50px; text-align: center; max-width: 800px; margin: 0 auto; }
-        .input-cyber { width: 100%; max-width: 400px; padding: 15px; margin: 10px; background: #000; border: 1px solid #333; color: var(--primary); font-family: inherit; outline: none; transition: 0.3s; }
-        .input-cyber:focus { border-color: var(--primary); box-shadow: 0 0 15px rgba(0,255,65,0.2); }
-        .submit-cyber { margin-top: 10px; padding: 15px 50px; background: transparent; border: 1px solid var(--primary); color: var(--primary); font-family: inherit; font-size: 1rem; letter-spacing: 2px; cursor: pointer; transition: 0.3s; }
-        .submit-cyber:hover { background: var(--primary); color: #000; box-shadow: 0 0 30px rgba(0,255,65,0.4); }
-
-        /* FOOTER */
-        footer { padding: 50px; text-align: center; color: #444; font-size: 0.8rem; border-top: 1px solid #111; margin-top: 50px; }
-        footer span { color: var(--primary); }
-
-        @media (max-width: 768px) {
-            .hero-title, .hero-title-2 { font-size: 4rem; }
-            .dashboard { grid-template-columns: 1fr; }
-            header { padding: 20px; }
-            nav { display: none; }
+        .container {
+            background-color: #1e293b;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 500px;
         }
+        h1 { text-align: center; margin-bottom: 1.5rem; color: #6366f1; }
+        .form-group { margin-bottom: 1rem; }
+        label { display: block; margin-bottom: 0.5rem; color: #94a3b8; font-size: 0.9rem; }
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            background-color: #0f172a;
+            color: white;
+            font-size: 1rem;
+        }
+        input:focus, select:focus { outline: none; border-color: #6366f1; }
+        .row { display: flex; gap: 10px; }
+        .col { flex: 1; }
+        button {
+            width: 100%;
+            padding: 12px;
+            background-color: #6366f1;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover { background-color: #4f46e5; }
+        .result-container {
+            margin-top: 1.5rem;
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 1rem;
+            display: none;
+        }
+        .result-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        pre { margin: 0; font-family: monospace; color: #22c55e; word-break: break-all; font-size: 0.9rem; }
+        .copy-btn { background: transparent; border: 1px solid #334155; color: #94a3b8; padding: 4px 8px; font-size: 0.8rem; width: auto; margin: 0; }
+        .copy-btn:hover { background: #334155; color: white; }
+        .helper { font-size: 0.8rem; color: #64748b; margin-top: 4px; }
     </style>
 </head>
 <body>
-    <!-- CURSOR -->
-    <div id="cursor"></div>
 
-    <!-- SCANLINE -->
-    <div class="scanline-overlay"></div>
+<div class="container">
+    <h1>Gerador de DNS SRV</h1>
 
-    <!-- LOADER -->
-    <div id="loader">
-        <div class="loader-box">
-            <div class="loader-text">> EXECUTING AEGIS PROTOCOL...</div>
-            <div class="loader-bar" id="bar"></div>
+    <div class="form-group">
+        <label>Domínio Principal</label>
+        <input type="text" id="domain" placeholder="ex: jogo.com">
+    </div>
+
+    <div class="form-group">
+        <label>Subdomínio Desejado</label>
+        <input type="text" id="subdomain" placeholder="ex: mc (vai criar mc.jogo.com)">
+        <div class="helper">Deixe vazio se quiser usar só o domínio principal</div>
+    </div>
+
+    <div class="row">
+        <div class="col">
+            <div class="form-group">
+                <label>Porta</label>
+                <input type="number" id="port" placeholder="25565">
+            </div>
         </div>
-        <button class="skip-btn" id="skipBtn">[ SKIP INTRO ]</button>
+        <div class="col">
+            <div class="form-group">
+                <label>Protocolo</label>
+                <select id="protocol">
+                    <option value="tcp">TCP</option>
+                    <option value="udp">UDP</option>
+                </select>
+            </div>
+        </div>
     </div>
 
-    <!-- BG MATRIX -->
-    <div id="matrix-bg"></div>
-
-    <!-- SCROLL PROGRESS BAR -->
-    <div id="progressBar"></div>
-
-    <!-- MAIN CONTENT -->
-    <div id="main-content">
-        <header>
-            <div class="logo">AEGIS<span>VORTEX</span></div>
-            <nav>
-                <a href="#home">HOME</a>
-                <a href="#dashboard">DASHBOARD</a>
-                <a href="#services">SERVICES</a>
-                <a href="#contact">CONTACT</a>
-            </nav>
-        </header>
-
-        <section id="home" class="hero">
-            <div style="position: relative;">
-                <h1 class="hero-title">AEGIS</h1>
-                <h1 class="hero-title glitch-layer">AEGIS</h1>
-                <h1 class="hero-title glitch-layer">AEGIS</h1>
-            </div>
-            <h1 class="hero-title-2">VORTEX</h1>
-            <p class="hero-sub" id="typewriter"></p>
-            <button class="btn-cyber" id="initBtn">INITIALIZE DEFENSE</button>
-        </section>
-
-        <section id="dashboard" class="dashboard">
-            <div class="stat-card">
-                <div class="stat-number">99.9%</div>
-                <div class="stat-label">Uptime Garantido</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">0</div>
-                <div class="stat-label">Brechas Detectadas</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-number">24/7</div>
-                <div class="stat-label">Monitoramento Ativo</div>
-            </div>
-        </section>
-
-        <section id="services" class="services-section">
-            <h2 class="section-title">NOSSOS SERVIÇOS</h2>
-            <div class="flip-grid">
-                <div class="flip-card">
-                    <div class="flip-card-inner">
-                        <div class="flip-front">
-                            <div class="icon-cyber">🛡️</div>
-                            <h3>PENETRATION TEST</h3>
-                        </div>
-                        <div class="flip-back">
-                            <h3>_ANALISE_AVANCADA</h3>
-                            <p>Simulamos ataques para identificar vulnerabilidades antes que invasores reais descubram.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="flip-card">
-                    <div class="flip-card-inner">
-                        <div class="flip-front">
-                            <div class="icon-cyber">🔒</div>
-                            <h3>ENCRYPTION</h3>
-                        </div>
-                        <div class="flip-back">
-                            <h3>_CRIPTOGRAFIA_MILITAR</h3>
-                            <p>Proteção de dados de nível militar com algoritmos pós-quânticos.</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="flip-card">
-                    <div class="flip-card-inner">
-                        <div class="flip-front">
-                            <div class="icon-cyber">👁️</div>
-                            <h3>MONITORING</h3>
-                        </div>
-                        <div class="flip-back">
-                            <h3>_VIGILANCIA_CONTINUA</h3>
-                            <p>IA monitorando seus sistemas 24/7 para detectar anomalias em tempo real.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="contact" class="contact-section">
-            <h2 class="section-title">CONTATO SEGURO</h2>
-            <form id="contactForm" onsubmit="return false;">
-                <input type="text" class="input-cyber" name="name" placeholder="SEU NOME" required>
-                <input type="email" class="input-cyber" name="email" placeholder="SEU EMAIL" required>
-                <input type="text" class="input-cyber" name="subject" placeholder="ASSUNTO" required>
-                <input type="text" class="input-cyber" name="message" placeholder="MENSAGEM" required>
-                <button type="submit" class="submit-cyber">ENVIAR</button>
-                <p style="max-width:520px;margin:18px auto 0;color:#3a3a3a;">
-                    (Demo) Nenhuma mensagem é enviada — apenas simulação.
-                </p>
-            </form>
-        </section>
-
-        <footer>
-            <div>AEGIS<span>VORTEX</span> • Cyber Defense • <span id="year"></span></div>
-        </footer>
+    <div class="form-group">
+        <label>Serviço (Tipo)</label>
+        <select id="service">
+            <option value="_minecraft._tcp">Minecraft (Java)</option>
+            <option value="_minecraft._udp">Minecraft (Bedrock)</option>
+            <option value="_teamspeak3._tcp">TeamSpeak 3</option>
+            <option value="_ts3._udp">TS3 (Alternativo)</option>
+            <option value="_http._tcp">HTTP / Site</option>
+            <option value="_ftp._tcp">FTP</option>
+            <option value="_generic._tcp">Genérico (_servico)</option>
+        </select>
     </div>
 
-    <script>
-        // Cursor
-        const cursor = document.getElementById('cursor');
-        window.addEventListener('mousemove', (e) => {
-            cursor.style.left = e.clientX + 'px';
-            cursor.style.top = e.clientY + 'px';
-        });
+    <div class="form-group">
+        <label>IP ou Host de Destino</label>
+        <input type="text" id="target" placeholder="192.168.1.10">
+    </div>
 
-        // Loader + reveal
-        const loader = document.getElementById('loader');
-        const mainContent = document.getElementById('main-content');
-        const bar = document.getElementById('bar');
-        const skipBtn = document.getElementById('skipBtn');
+    <button onclick="generateSRV()">Gerar SRV</button>
 
-        let progress = 0;
-        const interval = setInterval(() => {
-            progress += 2;
-            bar.style.width = progress + '%';
-            if (progress >= 100) {
-                clearInterval(interval);
-                loader.classList.add('hidden');
-                mainContent.classList.add('visible');
-            }
-        }, 25);
+    <div class="result-container" id="resultBox">
+        <div class="result-label">
+            <span>Código gerado:</span>
+            <button class="copy-btn" onclick="copyToClipboard()">Copiar</button>
+        </div>
+        <pre id="output"></pre>
+    </div>
+</div>
 
-        skipBtn.addEventListener('click', () => {
-            clearInterval(interval);
-            bar.style.width = '100%';
-            loader.classList.add('hidden');
-            mainContent.classList.add('visible');
-        });
+<script>
+    function generateSRV() {
+        const domain = document.getElementById('domain').value.trim();
+        const subdomain = document.getElementById('subdomain').value.trim();
+        const port = document.getElementById('port').value;
+        const protocol = document.getElementById('protocol').value;
+        const service = document.getElementById('service').value.split('.'); // Pega serviço e protocolo
+        const target = document.getElementById('target').value.trim();
 
-        // Progress bar
-        const progressBar = document.getElementById('progressBar');
-        window.addEventListener('scroll', () => {
-            const doc = document.documentElement;
-            const scrollTop = doc.scrollTop;
-            const scrollHeight = doc.scrollHeight - doc.clientHeight;
-            const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
-            progressBar.style.width = pct + '%';
-        }, { passive: true });
-
-        // Typewriter
-        const typewriterEl = document.getElementById('typewriter');
-        const text = 'SECURE YOUR SYSTEMS • DETECT THREATS • RESPOND FAST';
-        let idx = 0;
-        function tick() {
-            typewriterEl.textContent = text.slice(0, idx);
-            idx++;
-            if (idx <= text.length) setTimeout(tick, 35);
+        if (!domain || !port || !target) {
+            alert("Preencha: Domínio, Porta e IP/Host de Destino!");
+            return;
         }
-        setTimeout(tick, 900);
 
-        // Button demo
-        const initBtn = document.getElementById('initBtn');
-        initBtn.addEventListener('click', () => {
-            alert('AEGIS PROTOCOL INITIALIZED (demo)');
+        // Monta o host completo
+        // Se não colocar subdomain, usa o domínio principal
+        const host = subdomain.length > 0 
+            ? `${subdomain}.${domain}.` 
+            : `${domain}.`;
+
+        // Gera o tipo de serviço (ex: _minecraft._tcp)
+        const protoSelect = document.getElementById('service').value;
+        const finalServiceType = protoSelect.includes('_generic') 
+            ? `_servico.${protocol}` // Se for genérico, usa o que seleccionou (tcp/udp)
+            : protoSelect; 
+
+        // Formato Bind/CloudFlare/Generic DNS Standard:
+        // HostnameTTLClassTypePriorityWeightPortTarget
+        // Ex: _minecraft._tcp.jogo.com. 3600 IN SRV 0 5 25565 192.168.1.10.
+
+        const result = `${host} 3600 IN SRV 0 5 ${port} ${target}.`;
+
+        document.getElementById('output').innerText = result;
+        document.getElementById('resultBox').style.display = 'block';
+    }
+
+    function copyToClipboard() {
+        const text = document.getElementById('output').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Copiado!");
         });
+    }
+</script>
 
-        // Footer year
-        document.getElementById('year').textContent = new Date().getFullYear();
-    </script>
 </body>
 </html>
