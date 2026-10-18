@@ -3,9 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jarvis</title>
+    <meta name="description" content="Midas - Plataforma Jarvis">
+    <title>Jarvis | Midas</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b1020;
+            --bg-gradient: radial-gradient(1200px 600px at 50% -10%, #1a2347, #0b1020);
+            --text: #e6e8ee;
+            --subtext: #9aa0c3;
+            --accent: #4f9bff;
+            --accent-hover: #2563eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            padding: 1.5rem 1.25rem;
+            text-align: center;
+        }
+
+        .logo {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.875rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            opacity: 0.9;
+            transition: opacity 0.2s ease;
+        }
+
+        .logo:hover {
+            opacity: 1;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 1.25rem;
+            gap: 1rem;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            color: var(--subtext);
+            font-size: clamp(1rem, 2vw, 1.25rem);
+            margin-bottom: 1.5rem;
+        }
+
+        .cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.875rem 1.75rem;
+            border-radius: 9999px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+            color: #ffffff;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 20px 60px -20px rgba(79, 155, 255, 0.9);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 25px 70px -20px rgba(79, 155, 255, 1);
+        }
+
+        .cta:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 4px;
+        }
+
+        footer {
+            padding: 1.5rem 1.25rem;
+            text-align: center;
+            color: var(--subtext);
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 640px) {
+            .cta {
+                width: 100%;
+                max-width: 280px;
+                justify-content: center;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1><a href="https://midas.homeaxis.qzz.io">Midas</a></h1>
+    <header>
+        <a class="logo" href="https://midas.homeaxis.qzz.io" aria-label="Ir para Midas">Jarvis • Midas</a>
+    </header>
+    <main>
+        <h1>Midas</h1>
+        <p class="subtitle">Acesse a plataforma Midas para continuar</p>
+        <a class="cta" href="https://midas.homeaxis.qzz.io">
+            Entrar na plataforma
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M7.5 5L12.5 10L7.5 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </a>
+    </main>
+    <footer>
+        <p>&copy; 2026 Jarvis. Todos os direitos reservados.</p>
+    </footer>
 </body>
 </html>
+HTML
